@@ -31,3 +31,11 @@ dist-ssr
 # .vscode
 # CLAUDE.md
 
+# Fichiers et dossiers temporaire
+/tmp
+/backups
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
