@@ -70,6 +70,7 @@ interface DiagnosticResult {
 }
 
 export default function DiagnosticPage() {
+  const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<Step>('upload');
   const [images, setImages] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -148,6 +149,7 @@ export default function DiagnosticPage() {
   };
 
   useEffect(() => {
+    setMounted(true);
     return () => { if (loadingInterval.current) clearInterval(loadingInterval.current); };
   }, []);
 
@@ -171,11 +173,11 @@ export default function DiagnosticPage() {
             <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(1.8rem, 3vw, 2.6rem)', fontWeight: 700, color: '#1C2420', lineHeight: 1.2, margin: '0 0 0.75rem' }}>
               Votre diagnostic peau <em style={{ color: '#8B9E6E', fontStyle: 'italic' }}>gratuit</em>
             </h1>
-            <p style={{ fontSize: '0.95rem', color: '#7A8876', lineHeight: 1.65, margin: 0 }}>Analyse par IA · 3 expertises · Résultat en 60 secondes</p>
+            <p style={{ fontSize: '0.95rem', color: '#7A8876', lineHeight: 1.65, margin: 0 }}>Analyse assistée · 3 expertises · Résultat en 60 secondes</p>
           </div>
 
           {/* Free quota banner */}
-          {step === 'upload' && typeof window !== 'undefined' && (
+          {step === 'upload' && mounted && (
             <div style={{ marginBottom: '1.5rem', padding: '10px 16px', background: '#EBF0E4', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
               <svg fill="none" height="14" stroke="#8B9E6E" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="14"><circle cx="12" cy="12" r="10" /><path d="M12 8v4l3 3" /></svg>
               <span style={{ fontSize: '0.78rem', color: '#6B7C54', fontWeight: 500 }}>

@@ -71,7 +71,7 @@ export default function HeroSection() {
                   <span style={{ color: 'white', fontSize: '0.85rem', fontWeight: 600 }}>Diagnostic Skinalyze</span>
                 </div>
                 <div style={{ background: 'rgba(255,255,255,0.25)', borderRadius: 50, padding: '4px 10px' }}>
-                  <span style={{ color: 'white', fontSize: '0.7rem', fontWeight: 700 }}>IA Active</span>
+                  <span style={{ color: 'white', fontSize: '0.7rem', fontWeight: 700 }}>Analyse</span>
                 </div>
               </div>
               {/* Face illustration */}

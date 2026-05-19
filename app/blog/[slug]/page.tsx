@@ -1,9 +1,17 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import Link from 'next/link';
-import articles from '@/skincare-spa/src/assets/data/articles.json';
+import articlesData from '@/skincare-spa/src/assets/data/articles.json';
 import SiteHeader from '@/app/_components/site-header';
 import SiteFooter from '@/app/_components/site-footer';
+
+const articles = articlesData;
+
+function formatDate(iso: string) {
+  const MOIS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  const [y, m, d] = iso.split('-').map(Number);
+  return `${d} ${MOIS[m - 1]} ${y}`;
+}
 
 export function generateStaticParams() {
   return articles.map((a) => ({ slug: a.slug }));
@@ -32,36 +40,58 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
     <>
       <SiteHeader />
       <main style={{ minHeight: '100vh', background: '#FAF8F4', paddingTop: 90 }}>
-        {/* Hero */}
-        <div style={{ background: 'linear-gradient(160deg, #F5F2EC, #FAF8F4)', borderBottom: '1px solid #E8E4DC', padding: '4rem 2rem' }}>
-          <div style={{ maxWidth: 760, margin: '0 auto' }}>
-            <Link href="/blog" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#7A8876', textDecoration: 'none', marginBottom: '1.5rem' }}>
-              ← Retour au blog
-            </Link>
-            <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>{article.image}</div>
-            <time style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#8B9E6E', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginBottom: '1rem' }}>{article.date}</time>
-            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 700, color: '#1C2420', lineHeight: 1.2, letterSpacing: '-0.02em', margin: '0 0 1.25rem' }}>{article.titre}</h1>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.1rem', color: '#7A8876', lineHeight: 1.75, margin: 0 }}>{article.intro}</p>
-          </div>
-        </div>
+        <div style={{ maxWidth: 760, margin: '0 auto', padding: '3rem 2rem 5rem' }}>
 
-        {/* Content */}
-        <div style={{ maxWidth: 760, margin: '0 auto', padding: '3.5rem 2rem 5rem' }}>
-          {article.sections.map((section, i) => (
+          {/* Back */}
+          <Link href="/blog" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#7A8876', textDecoration: 'none', marginBottom: '2rem' }}>
+            ← Retour au blog
+          </Link>
+
+          {/* Emoji card */}
+          <div style={{ background: 'linear-gradient(135deg, #EBF0E4, #F5F2EC)', borderRadius: 20, height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2rem', border: '1px solid #E8E4DC' }}>
+            <span style={{ fontSize: '5rem' }}>{article!.image}</span>
+          </div>
+
+          {/* Date */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: '1rem' }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7A8876" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+            <time style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#8B9E6E', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{formatDate(article!.date)}</time>
+          </div>
+
+          {/* Title */}
+          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(2rem, 4vw, 2.8rem)', fontWeight: 700, color: '#1C2420', lineHeight: 1.2, letterSpacing: '-0.02em', margin: '0 0 1.25rem' }}>{article!.titre}</h1>
+
+          {/* Intro */}
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.05rem', color: '#7A8876', lineHeight: 1.75, margin: '0 0 2rem' }}>{article!.intro}</p>
+
+          {/* Divider */}
+          <hr style={{ border: 'none', borderTop: '1px solid #E8E4DC', marginBottom: '2.5rem' }} />
+
+          {/* Sections */}
+          {article!.sections.map((section, i) => (
             <section key={i} style={{ marginBottom: '2.5rem' }}>
-              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.5rem', fontWeight: 600, color: '#1C2420', lineHeight: 1.3, margin: '0 0 1rem', paddingTop: i > 0 ? '1rem' : 0, borderTop: i > 0 ? '1px solid #E8E4DC' : 'none' }}>{section.sous_titre}</h2>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.4rem', fontWeight: 600, color: '#1C2420', lineHeight: 1.3, margin: '0 0 0.9rem' }}>{section.sous_titre}</h2>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '1rem', color: '#3D4A3A', lineHeight: 1.8, margin: 0 }}>{section.contenu}</p>
             </section>
           ))}
 
           {/* CTA */}
-          <div style={{ marginTop: '3rem', padding: '2.5rem', background: 'linear-gradient(135deg, #EBF0E4, #F5F2EC)', borderRadius: 20, textAlign: 'center' }}>
-            <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.4rem', fontWeight: 600, color: '#1C2420', margin: '0 0 0.75rem' }}>Prêt à analyser votre peau ?</h3>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', color: '#7A8876', lineHeight: 1.65, margin: '0 0 1.5rem' }}>Obtenez votre diagnostic personnalisé en 60 secondes, gratuitement.</p>
-            <Link href="/diagnostic" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'Inter, sans-serif', fontSize: '0.95rem', fontWeight: 600, color: 'white', background: 'linear-gradient(135deg, #8B9E6E, #6B7C54)', padding: '0.85rem 2rem', borderRadius: 50, textDecoration: 'none', boxShadow: '0 4px 16px #8B9E6E40' }}>
-              Tester gratuitement →
-            </Link>
+          <div style={{ marginTop: '3rem', padding: '2.5rem', background: 'linear-gradient(135deg, #1C2420, #2D3B2A)', borderRadius: 20, textAlign: 'center' }}>
+            <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.4rem', fontWeight: 600, color: '#FFFFFF', margin: '0 0 0.75rem' }}>Obtenez votre diagnostic personnalisé en 60 secondes</h3>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.88rem', color: '#A8B8A4', lineHeight: 1.65, margin: '0 0 1.75rem', maxWidth: 460, marginLeft: 'auto', marginRight: 'auto' }}>
+              Lancez un diagnostic guidé ou réservez une démo B2B pour découvrir comment Skinalyze s&apos;intègre dans le parcours client de votre institut.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link href="/diagnostic" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'Inter, sans-serif', fontSize: '0.92rem', fontWeight: 600, color: 'white', background: 'linear-gradient(135deg, #8B9E6E, #6B7C54)', padding: '0.8rem 1.6rem', borderRadius: 50, textDecoration: 'none', boxShadow: '0 4px 16px #8B9E6E50' }}>
+                <svg fill="none" height="15" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="15"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+                Lancer un diagnostic
+              </Link>
+              <Link href="/#contact" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'Inter, sans-serif', fontSize: '0.92rem', fontWeight: 600, color: '#D4E0CC', background: 'transparent', padding: '0.8rem 1.6rem', borderRadius: 50, textDecoration: 'none', border: '1.5px solid rgba(255,255,255,0.2)' }}>
+                Demander une démo B2B
+              </Link>
+            </div>
           </div>
+
         </div>
       </main>
       <SiteFooter />
