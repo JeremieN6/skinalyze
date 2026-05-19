@@ -4,8 +4,8 @@ import { useState } from 'react';
 
 const faqs = [
   {
-    q: "Comment fonctionne l'analyse IA ?",
-    a: "L'utilisateur uploade une photo de son visage. Notre IA analyse la texture, le teint, les pores et plusieurs dizaines de marqueurs cutanés. En moins de 60 secondes, trois rapports sont générés : dermatologique, cosmétique et bien-être.",
+    q: "Comment fonctionne l'analyse avec notre outil ?",
+    a: "L'utilisateur uploade une photo de son visage. Skinalyze analyse la texture, le teint, les pores et plusieurs dizaines de marqueurs cutanés. En moins de 60 secondes, trois rapports sont générés : dermatologique, cosmétique et bien-être.",
   },
   {
     q: "Faut-il installer quelque chose ?",

@@ -2,14 +2,14 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Skinalyze — Analyse de peau par IA en 60 secondes',
+  title: 'Skinalyze — Analyse de peau en 60 secondes',
   description:
-    'Offrez à chaque client un diagnostic peau personnalisé en 60 secondes. Co-analysé par dermatologue, cosmétologue et coach bien-être. Solution B2B pour instituts de beauté, spas et marques cosmétiques.',
+    'Offrez à chaque client un diagnostic peau personnalisé en 60 secondes. Co-analysé par dermatologue, cosmétologue et coach bien-être. Solution pour instituts de beauté, spas et marques cosmétiques.',
   robots: 'index, follow',
   openGraph: {
-    title: 'Skinalyze — Diagnostic peau IA en 60 secondes | Solution B2B',
+    title: 'Skinalyze — Diagnostic peau en 60 secondes | Solution Professionnelle',
     description:
-      'La solution B2B pour les instituts et spas qui veulent proposer un diagnostic de peau par IA en 60 secondes et mieux convertir en prestations et produits.',
+      'La solution professionnelle pour les instituts et spas qui veulent proposer un diagnostic de peau en 60 secondes et mieux convertir en prestations et produits.',
     url: 'https://skinalyze.nanocorp.app',
     locale: 'fr_FR',
     type: 'website',
@@ -17,15 +17,15 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Skinalyze — Diagnostic peau IA en 60 secondes',
+    title: 'Skinalyze — Diagnostic peau en 60 secondes',
     description:
-      'La solution B2B pour les instituts et spas qui veulent proposer un diagnostic de peau par IA en 60 secondes.',
+      'La solution professionnelle pour les instituts et spas qui veulent proposer un diagnostic de peau en 60 secondes.',
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr">
+    <html lang="fr" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -34,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }

@@ -108,7 +108,7 @@ export default function DemoFormSection() {
             {/* Quote */}
             <div style={{ padding: '1.25rem', background: '#EBF0E4', borderRadius: 16, borderLeft: '3px solid #8B9E6E' }}>
               <blockquote style={{ fontFamily: "'Playfair Display', serif", fontSize: '0.9rem', fontStyle: 'italic', color: '#3D4A3A', lineHeight: 1.65, margin: 0 }}>
-                &ldquo;En 2 semaines, nos clientes nous demandent systématiquement le diagnostic.&rdquo;
+                &ldquo;En seulement 2 semaines, nos clientes nous demandent déjà systématiquement le diagnostic.&rdquo;
               </blockquote>
               <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#7A8876', marginTop: '0.75rem' }}>— Camille B., fondatrice · Maison de beauté, Bordeaux</div>
             </div>

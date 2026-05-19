@@ -55,6 +55,17 @@ export default function BlogPage() {
               </Link>
             ))}
           </div>
+          <div style={{ marginTop: '5rem', padding: '3rem 2rem', background: 'linear-gradient(135deg, rgb(107, 124, 84) 0%, rgb(28, 36, 32) 100%)', borderRadius: 24, textAlign: 'center' }}>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(1.5rem, 3vw, 2.2rem)', fontWeight: 700, color: 'white', margin: '0px 0px 1rem', letterSpacing: '-0.02em' }}>
+              Envie de connaître <em style={{ color: 'rgba(196, 151, 90, 0.8)', fontStyle: 'italic' }}>l&apos;état de votre peau ?</em>
+            </h2>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '1rem', color: 'rgba(255, 255, 255, 0.7)', margin: '0px 0px 2rem', lineHeight: 1.7 }}>
+              Essayez notre diagnostic gratuit et obtenez des recommandations personnalisées en 60 secondes.
+            </p>
+            <Link href="/diagnostic" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'Inter, sans-serif', fontSize: '0.95rem', fontWeight: 600, color: 'rgb(28, 36, 32)', background: 'white', padding: '0.85rem 2rem', borderRadius: 50, textDecoration: 'none', boxShadow: 'rgba(0, 0, 0, 0.2) 0px 4px 20px' }}>
+              <span>🔬</span> Analyser ma peau
+            </Link>
+          </div>
         </div>
       </main>
       <SiteFooter />

@@ -16,7 +16,7 @@ const steps = [
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
       </svg>
     ),
-    title: "L'IA analyse la peau",
+    title: "L'outil analyse la peau",
     desc: "En moins de 60 secondes, trois angles d'analyse : dermatologique, cosmétique et bien-être.",
   },
   {

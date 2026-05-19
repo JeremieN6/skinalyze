@@ -25,7 +25,7 @@ export default function HeroSection() {
         <div className="hero-copy">
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#EBF0E4', border: '1px solid #8B9E6E40', borderRadius: 50, padding: '6px 16px', marginBottom: '1.5rem' }}>
             <div className="animate-pulse-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: '#8B9E6E' }} />
-            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', fontWeight: 600, color: '#6B7C54', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Solution B2B · Instituts &amp; Spas</span>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', fontWeight: 600, color: '#6B7C54', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Solution Professionnelle · Instituts &amp; Spas</span>
           </div>
 
           <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(2.4rem, 4.5vw, 3.8rem)', fontWeight: 700, color: '#1C2420', lineHeight: 1.15, letterSpacing: '-0.02em', margin: '0 0 1.5rem' }}>

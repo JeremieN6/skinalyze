@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 export default function SiteFooter() {
   return (
     <footer style={{ background: '#1C2420', padding: '4rem 2rem 2.5rem', color: 'rgba(255,255,255,0.7)' }}>
@@ -53,7 +55,7 @@ export default function SiteFooter() {
         </div>
 
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <span suppressHydrationWarning style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem' }}>© {new Date().getFullYear()} Skinalyze — Tous droits réservés</span>
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem' }}>© {CURRENT_YEAR} Skinalyze — Tous droits réservés</span>
           <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', color: '#8B9E6E80' }}>Propulsé par Skinalyze</span>
         </div>
       </div>
