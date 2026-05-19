@@ -17,8 +17,9 @@ export function generateStaticParams() {
   return articles.map((a) => ({ slug: a.slug }));
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const article = articles.find((a) => a.slug === params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const article = articles.find((a) => a.slug === slug);
   if (!article) return {};
   return {
     title: `${article.titre} | Skinalyze Blog`,
@@ -32,15 +33,16 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default function ArticlePage({ params }: { params: { slug: string } }) {
-  const article = articles.find((a) => a.slug === params.slug);
+export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const article = articles.find((a) => a.slug === slug);
   if (!article) notFound();
 
   return (
     <>
       <SiteHeader />
       <main style={{ minHeight: '100vh', background: '#FAF8F4', paddingTop: 90 }}>
-        <div style={{ maxWidth: 760, margin: '0 auto', padding: '3rem 2rem 5rem' }}>
+        <div style={{ maxWidth: 800, margin: '0px auto', width: '100%', padding: '3rem 2rem 6rem' }}>
 
           {/* Back */}
           <Link href="/blog" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#7A8876', textDecoration: 'none', marginBottom: '2rem' }}>
@@ -65,8 +67,8 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.05rem', color: '#7A8876', lineHeight: 1.75, margin: '0 0 2rem' }}>{article!.intro}</p>
 
           {/* Divider */}
-          <hr style={{ border: 'none', borderTop: '1px solid #E8E4DC', marginBottom: '2.5rem' }} />
-
+          <div style={{ height: 2, background: 'linear-gradient(90deg, rgb(139, 158, 110) 0%, transparent 100%)', borderRadius: 1, marginBottom: '3rem', width: 80 }}></div>
+          
           {/* Sections */}
           {article!.sections.map((section, i) => (
             <section key={i} style={{ marginBottom: '2.5rem' }}>
@@ -76,14 +78,14 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
           ))}
 
           {/* CTA */}
-          <div style={{ marginTop: '3rem', padding: '2.5rem', background: 'linear-gradient(135deg, #1C2420, #2D3B2A)', borderRadius: 20, textAlign: 'center' }}>
+          <div style={{ marginTop: '3rem', padding: '2.5rem', background: 'linear-gradient(135deg, rgb(107, 124, 84) 0%, rgb(28, 36, 32) 100%)', borderRadius: 20, textAlign: 'center' }}>
             <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.4rem', fontWeight: 600, color: '#FFFFFF', margin: '0 0 0.75rem' }}>Obtenez votre diagnostic personnalisé en 60 secondes</h3>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.88rem', color: '#A8B8A4', lineHeight: 1.65, margin: '0 0 1.75rem', maxWidth: 460, marginLeft: 'auto', marginRight: 'auto' }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.95rem', color: 'rgba(255, 255, 255, 0.7)', margin: '0 0 1.75rem', lineHeight: 1.65 }}>
               Lancez un diagnostic guidé ou réservez une démo B2B pour découvrir comment Skinalyze s&apos;intègre dans le parcours client de votre institut.
             </p>
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Link href="/diagnostic" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'Inter, sans-serif', fontSize: '0.92rem', fontWeight: 600, color: 'white', background: 'linear-gradient(135deg, #8B9E6E, #6B7C54)', padding: '0.8rem 1.6rem', borderRadius: 50, textDecoration: 'none', boxShadow: '0 4px 16px #8B9E6E50' }}>
-                <svg fill="none" height="15" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="15"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+              <Link href="/diagnostic" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'Inter, sans-serif', fontSize: '0.92rem', fontWeight: 600, color: 'black', background: 'white', padding: '0.8rem 1.6rem', borderRadius: 50, textDecoration: 'none', boxShadow: '0 4px 16px #8B9E6E50' }}>
+                <span>🔬</span>
                 Lancer un diagnostic
               </Link>
               <Link href="/#contact" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'Inter, sans-serif', fontSize: '0.92rem', fontWeight: 600, color: '#D4E0CC', background: 'transparent', padding: '0.8rem 1.6rem', borderRadius: 50, textDecoration: 'none', border: '1.5px solid rgba(255,255,255,0.2)' }}>
