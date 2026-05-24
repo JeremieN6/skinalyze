@@ -21,8 +21,8 @@ export default function SiteFooter() {
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.875rem', lineHeight: 1.65, maxWidth: 320, margin: '0 0 1.5rem' }}>
               En 60 secondes, chaque client repart avec un diagnostic peau personnalisé.
             </p>
-            <a href="mailto:contact@skinalyze.fr" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.875rem', color: '#8B9E6Ecc', textDecoration: 'none', borderBottom: '1px solid #8B9E6E40', paddingBottom: 1 }}>
-              contact@skinalyze.fr
+            <a href="mailto:contact.skinalyze@sassify.fr" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.875rem', color: '#8B9E6Ecc', textDecoration: 'none', borderBottom: '1px solid #8B9E6E40', paddingBottom: 1 }}>
+              contact.skinalyze@sassify.fr
             </a>
           </div>
 
@@ -33,7 +33,7 @@ export default function SiteFooter() {
                 { href: '/diagnostic', label: 'Tester gratuitement' },
                 { href: '/#tarifs', label: 'Tarifs' },
                 { href: '/blog', label: 'Blog' },
-                { href: 'mailto:contact@skinalyze.fr', label: 'Contact' },
+                { href: 'mailto:contact.skinalyze@sassify.fr', label: 'Contact' },
               ].map((l) => (
                 <div key={l.href} style={{ marginBottom: '0.6rem' }}>
                   <Link href={l.href} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>{l.label}</Link>

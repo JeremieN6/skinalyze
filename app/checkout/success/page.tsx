@@ -29,7 +29,7 @@ export default function CheckoutSuccessPage() {
             </Link>
           </div>
           <p style={{ fontSize: '0.78rem', color: '#7A8876', marginTop: '1.75rem' }}>
-            Des questions ? <a href="mailto:contact@skinalyze.fr" style={{ color: '#8B9E6E', textDecoration: 'none', borderBottom: '1px solid #8B9E6E50' }}>contact@skinalyze.fr</a>
+            Des questions ? <a href="mailto:contact.skinalyze@sassify.fr" style={{ color: '#8B9E6E', textDecoration: 'none', borderBottom: '1px solid #8B9E6E50' }}>contact.skinalyze@sassify.fr</a>
           </p>
         </div>
       </main>

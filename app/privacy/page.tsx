@@ -6,7 +6,7 @@ export default function PrivacyPage() {
       <h2>1. Responsable du traitement</h2>
       <p>
         Skinalyze est responsable du traitement de vos données personnelles.
-        Contact : <a href="mailto:contact@skinalyze.fr">contact@skinalyze.fr</a>
+        Contact : <a href="mailto:contact.skinalyze@sassify.fr">contact.skinalyze@sassify.fr</a>
       </p>
 
       <h2>2. Données collectées</h2>
@@ -39,7 +39,7 @@ export default function PrivacyPage() {
       <h2>6. Vos droits</h2>
       <p>
         Conformément au RGPD, vous disposez des droits d'accès, de rectification, d'effacement, de portabilité
-        et d'opposition. Pour exercer ces droits : <a href="mailto:contact@skinalyze.fr">contact@skinalyze.fr</a>
+        et d'opposition. Pour exercer ces droits : <a href="mailto:contact.skinalyze@sassify.fr">contact.skinalyze@sassify.fr</a>
       </p>
       <p>
         Vous pouvez également introduire une réclamation auprès de la CNIL (www.cnil.fr).

@@ -69,7 +69,7 @@ export default function FaqSection() {
 
         <div style={{ textAlign: 'center', marginTop: '3rem' }}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', color: '#7A8876', marginBottom: '0.5rem' }}>Vous n&apos;avez pas trouvé la réponse ?</p>
-          <a href="mailto:contact@skinalyze.fr" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: '#8B9E6E', textDecoration: 'none', borderBottom: '1px solid #8B9E6E50', paddingBottom: 2 }}>Contactez-nous →</a>
+          <a href="mailto:contact.skinalyze@sassify.fr" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: '#8B9E6E', textDecoration: 'none', borderBottom: '1px solid #8B9E6E50', paddingBottom: 2 }}>Contactez-nous →</a>
         </div>
       </div>
     </section>

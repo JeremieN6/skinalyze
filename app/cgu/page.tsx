@@ -52,7 +52,7 @@ export default function CguPage() {
       </p>
 
       <h2>8. Contact</h2>
-      <p>Pour toute question : <a href="mailto:contact@skinalyze.fr">contact@skinalyze.fr</a></p>
+      <p>Pour toute question : <a href="mailto:contact.skinalyze@sassify.fr">contact.skinalyze@sassify.fr</a></p>
     </LegalShell>
   );
 }

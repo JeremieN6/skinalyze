@@ -65,7 +65,7 @@ export default function PricingSection() {
         <div style={{ textAlign: 'center', padding: '2rem', background: '#FAFAF7', borderRadius: 20, maxWidth: 600, margin: '0 auto', border: '1px solid #E8E4DC' }}>
           <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.4rem', fontWeight: 600, color: '#1C2420', margin: '0 0 0.5rem' }}>Business — Sur devis</h3>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', color: '#7A8876', margin: '0 0 1.25rem', lineHeight: 1.65 }}>Marques cosmétiques, réseaux de spas, groupes hôteliers. Volume illimité, intégration sur-mesure, branding complet.</p>
-          <a href="mailto:contact@skinalyze.fr" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: '#8B9E6E', textDecoration: 'none', borderBottom: '1px solid #8B9E6E50', paddingBottom: 2 }}>Contacter l&apos;équipe →</a>
+          <a href="mailto:contact.skinalyze@sassify.fr" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: '#8B9E6E', textDecoration: 'none', borderBottom: '1px solid #8B9E6E50', paddingBottom: 2 }}>Contacter l&apos;équipe →</a>
         </div>
       </div>
       <style>{`
