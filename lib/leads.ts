@@ -1,7 +1,11 @@
 import { neon } from '@neondatabase/serverless';
 
 async function getDb() {
-  return neon(process.env.DATABASE_URL!);
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL is not configured');
+  }
+  return neon(databaseUrl);
 }
 
 async function ensureTable() {

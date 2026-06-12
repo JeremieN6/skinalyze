@@ -1,17 +1,24 @@
 import { redirect } from 'next/navigation';
 import { isAdminAuthenticated } from '@/lib/admin-auth';
 import { getStats } from '@/lib/tracking';
+import { getDatabaseHealth } from '@/lib/db-status';
 
 export default async function AdminStatsPage() {
   if (!(await isAdminAuthenticated())) redirect('/admin');
+
+  const dbHealth = await getDatabaseHealth();
 
   type Stats = { total_users: number; total_events: number; breakdown: { event: string; count: string | number }[] };
   let stats: Stats | null = null;
   let err = '';
   try {
     stats = await getStats() as Stats;
-  } catch {
-    err = 'Erreur de connexion à la base de données.';
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('DATABASE_URL')) {
+      err = 'Configuration manquante: ajoutez DATABASE_URL dans les variables d\'environnement.';
+    } else {
+      err = 'Erreur de connexion à la base de données.';
+    }
   }
 
   return (
@@ -28,6 +35,14 @@ export default async function AdminStatsPage() {
               <button type="submit" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', fontWeight: 500, color: '#7A8876', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Déconnexion</button>
             </form>
           </div>
+        </div>
+
+        <div style={{ marginBottom: '1rem', background: dbHealth.ok ? '#EBF6E9' : '#FDECEC', border: `1px solid ${dbHealth.ok ? '#8B9E6E55' : '#DC262655'}`, borderRadius: 14, padding: '0.9rem 1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+            <span style={{ width: 9, height: 9, borderRadius: '50%', background: dbHealth.ok ? '#3F7D2A' : '#DC2626', display: 'inline-block' }} />
+            <strong style={{ color: dbHealth.ok ? '#2F5F20' : '#9F1D1D', fontSize: '0.86rem' }}>Base de donnees: {dbHealth.label}</strong>
+          </div>
+          <p style={{ margin: 0, color: dbHealth.ok ? '#3D4A3A' : '#7F1D1D', fontSize: '0.82rem' }}>{dbHealth.details}</p>
         </div>
 
         {err ? (

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { setAdminCookie } from '@/lib/admin-auth';
+import { getAdminPassword, setAdminCookie } from '@/lib/admin-auth';
 
 export async function POST(req: NextRequest) {
   try {
     const { password } = await req.json();
-    const adminPassword = process.env.SKINALYZE_ADMIN_PASSWORD ?? 'skinalyze2024';
+    const adminPassword = getAdminPassword();
     if (password !== adminPassword) {
       return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
     }

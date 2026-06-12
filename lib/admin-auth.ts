@@ -1,18 +1,21 @@
 import { cookies } from 'next/headers';
 
-const ADMIN_PASSWORD = process.env.SKINALYZE_ADMIN_PASSWORD ?? 'skinalyze2024';
 const COOKIE_NAME = 'skinalyze_session';
+
+export function getAdminPassword() {
+  return process.env.SKINALYZE_ADMIN_PASSWORD ?? process.env.ADMIN_PASSWORD ?? 'skinalyze2024';
+}
 
 export async function isAdminAuthenticated(): Promise<boolean> {
   const cookieStore = await cookies();
   const cookie = cookieStore.get(COOKIE_NAME);
-  return cookie?.value === ADMIN_PASSWORD;
+  return cookie?.value === getAdminPassword();
 }
 
 export function setAdminCookie(): { name: string; value: string; httpOnly: boolean; secure: boolean; sameSite: 'strict'; maxAge: number } {
   return {
     name: COOKIE_NAME,
-    value: ADMIN_PASSWORD,
+    value: getAdminPassword(),
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
