@@ -70,9 +70,7 @@ export default function DemoFormSection() {
         </div>
 
         <div className="demo-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', alignItems: 'start' }}>
-          {/* Left */}
           <div style={{ padding: '2.5rem', background: '#FFFFFF', borderRadius: 24, border: '1px solid rgba(139,158,110,0.2)', boxShadow: '0 4px 24px rgba(28,36,32,0.07)', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {/* FOMO avatars */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ display: 'flex', flexShrink: 0 }}>
                 {[{ initials: 'ML', color1: '#8B9E6E60', color2: '#8B9E6E', z: 3 }, { initials: 'SR', color1: '#C4975A60', color2: '#C4975A', z: 2 }, { initials: 'CB', color1: '#6B7C5460', color2: '#6B7C54', z: 1 }].map((a, i) => (
@@ -87,7 +85,6 @@ export default function DemoFormSection() {
               </div>
             </div>
 
-            {/* Benefits */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {[
                 { title: '14 jours offerts', desc: 'Accès complet sans engagement.' },
@@ -105,7 +102,6 @@ export default function DemoFormSection() {
               ))}
             </div>
 
-            {/* Quote */}
             <div style={{ padding: '1.25rem', background: '#EBF0E4', borderRadius: 16, borderLeft: '3px solid #8B9E6E' }}>
               <blockquote style={{ fontFamily: "'Playfair Display', serif", fontSize: '0.9rem', fontStyle: 'italic', color: '#3D4A3A', lineHeight: 1.65, margin: 0 }}>
                 &ldquo;En seulement 2 semaines, nos clientes nous demandent déjà systématiquement le diagnostic.&rdquo;
@@ -114,7 +110,6 @@ export default function DemoFormSection() {
             </div>
           </div>
 
-          {/* Right — Form */}
           <div style={{ background: '#FFFFFF', borderRadius: 24, boxShadow: '0 8px 40px rgba(28,36,32,0.1)', border: '1px solid rgba(139,158,110,0.15)', overflow: 'hidden' }}>
             <div style={{ padding: '1.5rem 2rem', background: 'linear-gradient(135deg, #8B9E6E15, #C4975A10)', borderBottom: '1px solid rgba(139,158,110,0.15)' }}>
               <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.2rem', fontWeight: 600, color: '#1C2420', margin: '0 0 0.25rem' }}>Demandez votre accès pilote</h3>
