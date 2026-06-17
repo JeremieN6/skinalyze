@@ -7,7 +7,6 @@ const DIAG_COUNT_KEY = 'skinalyze_diag_count';
 const USER_ID_KEY = 'skinalyze_user_id';
 const PRO_CUSTOMER_KEY = 'skinalyze_pro_customer';
 const PDF_LOGO_KEY = 'skinalyze_pdf_logo';
-const INSTITUTE_NAME_KEY = 'skinalyze_institute_name';
 const FREE_QUOTA = 3;
 
 interface AuthState {
@@ -201,7 +200,6 @@ export default function DiagnosticPage() {
   const [result, setResult] = useState<DiagnosticResult | null>(null);
   const [error, setError] = useState('');
   const [logoError, setLogoError] = useState('');
-  const [instituteName, setInstituteName] = useState('');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [pdfLogo, setPdfLogo] = useState<string | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -492,34 +490,6 @@ export default function DiagnosticPage() {
       }
 
       cursorY += 16;
-      const reportId = `${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0')}`;
-
-      addPageBackground();
-      doc.setTextColor(28, 36, 32);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(17);
-      doc.text('Rapport de diagnostic de peau', marginX, cursorY + 2);
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9.5);
-      doc.setTextColor(95, 108, 95);
-      doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')}`, marginX, cursorY + 8);
-
-      if (isPaidSubscriber && instituteName.trim()) {
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10.5);
-        doc.setTextColor(28, 36, 32);
-        doc.text(instituteName.trim(), marginX, cursorY + 14);
-      }
-
-      if (isPaidSubscriber && pdfLogo) {
-        const logoFormat = pdfLogo.includes('image/png') ? 'PNG' : 'JPEG';
-        const logoWidth = 30;
-        const logoHeight = 16;
-        doc.addImage(pdfLogo, logoFormat, pageWidth - marginX - logoWidth, cursorY - 1, logoWidth, logoHeight, undefined, 'FAST');
-      }
-
-      cursorY += isPaidSubscriber && instituteName.trim() ? 20 : 16;
 
       const diagnosisLines = doc.splitTextToSize(result.diagnosis.summary, contentWidth - 8) as string[];
       drawSection(result.diagnosis.title, diagnosisLines, [139, 158, 110]);
@@ -547,29 +517,11 @@ export default function DiagnosticPage() {
       const productsLines = doc.splitTextToSize(productsText || 'Aucune recommandation produit.', contentWidth - 8) as string[];
       drawSection(result.products.title, productsLines, [229, 154, 58]);
 
-      const footerY = pageHeight - 18;
-
-      doc.setDrawColor(210, 205, 196);
-      doc.line(marginX, footerY, pageWidth - marginX, footerY);
-
+      ensureSpace(10);
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8.5);
       doc.setTextColor(110, 122, 106);
-
-      if (isPaidSubscriber) {
-        const sigLeft = instituteName.trim()
-          ? `Signé par ${instituteName.trim()}`
-          : 'Rapport professionnel Skinalyze';
-        doc.text(sigLeft, marginX, footerY + 5);
-        doc.text(`Rapport #${reportId} · Analysé par Skinalyze`, pageWidth - marginX, footerY + 5, { align: 'right' });
-      } else {
-        doc.text('Rapport généré par Skinalyze · skinalyze.fr', marginX, footerY + 5);
-        doc.text(`Rapport #${reportId}`, pageWidth - marginX, footerY + 5, { align: 'right' });
-      }
-
-      doc.setFontSize(7.5);
-      doc.setTextColor(160, 168, 158);
-      doc.text('Document informatif — ne remplace pas un avis médical.', marginX, footerY + 9.5);
+      doc.text('Document informatif - ne remplace pas un avis médical.', marginX, pageHeight - 10);
 
       const fileDate = new Date().toISOString().slice(0, 10);
       doc.save(`rapport-diagnostic-peau-${fileDate}.pdf`);
@@ -596,8 +548,6 @@ export default function DiagnosticPage() {
       setIsProCustomer(localStorage.getItem(PRO_CUSTOMER_KEY) === 'true');
       const savedLogo = localStorage.getItem(PDF_LOGO_KEY);
       if (savedLogo) setPdfLogo(savedLogo);
-      const savedInstituteName = localStorage.getItem(INSTITUTE_NAME_KEY);
-      if (savedInstituteName) setInstituteName(savedInstituteName);
       // Prefer server session quota; fallback to local pseudo-user when not authenticated.
       (async () => {
         try {
@@ -641,7 +591,6 @@ export default function DiagnosticPage() {
     border: '1px solid #E8E4DC',
     boxShadow: '0 2px 12px rgba(28,36,32,0.06)',
   };
-  const isPaidSubscriber = isProCustomer || (auth.authenticated && !!auth.plan);
 
   const reportThemes = {
     diagnosis: {
@@ -904,102 +853,6 @@ export default function DiagnosticPage() {
                     <img src={pdfLogo} alt="Logo entreprise" style={{ width: 64, height: 40, objectFit: 'contain', background: '#FAFAF7', border: '1px solid #E8E4DC', borderRadius: 8, padding: 4 }} />
                     <span style={{ fontSize: '0.75rem', color: '#6D7A6A' }}>Ce logo sera apposé sur le PDF.</span>
                   </div>
-                )}
-
-                {logoError && <p style={{ margin: '0.75rem 0 0', fontSize: '0.8rem', color: '#DC2626' }}>{logoError}</p>}
-              </div>
-              <div style={{ ...sharedCard, padding: '1.25rem 1.25rem' }}>
-                <input
-                  ref={logoInputRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/jpg"
-                  style={{ display: 'none' }}
-                  onChange={(e) => handleLogoUpload(e.target.files)}
-                />
-
-                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: '1rem', fontWeight: 600, color: '#1C2420', margin: '0 0 0.3rem' }}>
-                  Rapport PDF personnalisé
-                </p>
-                <p style={{ fontSize: '0.8rem', color: '#6D7A6A', margin: '0 0 1rem' }}>
-                  Personnalisez le rapport avec les informations de votre institut avant de le télécharger.
-                </p>
-
-                {/* Institut name field */}
-                <div style={{ marginBottom: '0.9rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.73rem', fontWeight: 700, color: '#4A5B46', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '0.35rem' }}>
-                    Nom de votre institut
-                  </label>
-                  {isPaidSubscriber ? (
-                    <input
-                      type="text"
-                      value={instituteName}
-                      onChange={(e) => {
-                        setInstituteName(e.target.value);
-                        try { localStorage.setItem(INSTITUTE_NAME_KEY, e.target.value); } catch {}
-                      }}
-                      placeholder="Ex : Institut Belle Peau, Spa du Marais…"
-                      maxLength={60}
-                      style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #C9D2BE', borderRadius: 10, padding: '0.6rem 0.75rem', fontSize: '0.86rem', color: '#1C2420', background: '#FAFAF7', outline: 'none', fontFamily: 'Inter, sans-serif' }}
-                    />
-                  ) : (
-                    <div style={{ position: 'relative' }}>
-                      <input
-                        type="text"
-                        disabled
-                        placeholder="Réservé aux abonnés Starter et Pro"
-                        style={{ width: '100%', boxSizing: 'border-box', border: '1px dashed #C9D2BE', borderRadius: 10, padding: '0.6rem 0.75rem 0.6rem 2rem', fontSize: '0.86rem', color: '#A0A8A0', background: '#F5F5F3', fontFamily: 'Inter, sans-serif', cursor: 'not-allowed' }}
-                      />
-                      <span style={{ position: 'absolute', left: '0.6rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.85rem', pointerEvents: 'none' }}>🔒</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Logo + Download buttons */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexWrap: 'wrap' }}>
-                  {isPaidSubscriber ? (
-                    <>
-                      <button
-                        onClick={() => logoInputRef.current?.click()}
-                        style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 600, color: '#1C2420', border: '1px solid #C9D2BE', borderRadius: 999, background: '#F7FAF4', padding: '0.55rem 0.95rem', cursor: 'pointer' }}
-                      >
-                        {pdfLogo ? 'Remplacer le logo' : '+ Logo entreprise'}
-                      </button>
-                      {pdfLogo && (
-                        <button
-                          onClick={removeLogo}
-                          style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 600, color: '#6D7A6A', border: '1px solid #DCD6CC', borderRadius: 999, background: 'white', padding: '0.55rem 0.95rem', cursor: 'pointer' }}
-                        >
-                          Retirer le logo
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '0.79rem', color: '#6B7C54', fontWeight: 600, padding: '0.45rem 0.75rem', background: '#EBF0E4', borderRadius: 999 }}>
-                      🔒 Logo personnalisé — plan payant
-                    </span>
-                  )}
-
-                  <button
-                    onClick={handlePdfDownload}
-                    disabled={isExportingPdf}
-                    style={{ marginLeft: 'auto', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 700, color: 'white', border: 'none', borderRadius: 999, background: 'linear-gradient(135deg, #8B9E6E, #6B7C54)', padding: '0.55rem 0.95rem', cursor: isExportingPdf ? 'default' : 'pointer', opacity: isExportingPdf ? 0.75 : 1 }}
-                  >
-                    {isExportingPdf ? 'Génération PDF...' : '⬇ Télécharger le PDF'}
-                  </button>
-                </div>
-
-                {isPaidSubscriber && pdfLogo && (
-                  <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: 10 }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={pdfLogo} alt="Logo entreprise" style={{ width: 64, height: 40, objectFit: 'contain', background: '#FAFAF7', border: '1px solid #E8E4DC', borderRadius: 8, padding: 4 }} />
-                    <span style={{ fontSize: '0.75rem', color: '#6D7A6A' }}>Ce logo sera apposé sur le PDF.</span>
-                  </div>
-                )}
-
-                {!isPaidSubscriber && (
-                  <p style={{ margin: '0.85rem 0 0', fontSize: '0.76rem', color: '#6B7C54', background: '#F4F7EF', borderRadius: 8, padding: '0.5rem 0.7rem' }}>
-                    Le PDF inclura la mention <strong>« Rapport généré par Skinalyze »</strong>. Passez à un plan payant pour un rapport à votre marque, avec votre logo et le nom de votre institut.
-                  </p>
                 )}
 
                 {logoError && <p style={{ margin: '0.75rem 0 0', fontSize: '0.8rem', color: '#DC2626' }}>{logoError}</p>}
