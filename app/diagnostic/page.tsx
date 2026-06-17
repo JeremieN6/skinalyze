@@ -6,6 +6,7 @@ import Link from 'next/link';
 const DIAG_COUNT_KEY = 'skinalyze_diag_count';
 const USER_ID_KEY = 'skinalyze_user_id';
 const PRO_CUSTOMER_KEY = 'skinalyze_pro_customer';
+const PDF_LOGO_KEY = 'skinalyze_pdf_logo';
 const FREE_QUOTA = 3;
 
 function getUserId(): string {
@@ -48,6 +49,48 @@ function compressImage(file: File): Promise<string> {
     };
     img.onerror = reject;
     img.src = URL.createObjectURL(file);
+  });
+}
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        reject(new Error('Invalid file result'));
+        return;
+      }
+      resolve(reader.result);
+    };
+    reader.onerror = () => reject(new Error('Unable to read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function compressLogoImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const maxDimension = 700;
+      const ratio = Math.min(maxDimension / img.width, maxDimension / img.height, 1);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.floor(img.width * ratio));
+      canvas.height = Math.max(1, Math.floor(img.height * ratio));
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Canvas unavailable'));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/png', 0.92));
+    };
+    img.onerror = () => reject(new Error('Invalid image file'));
+
+    fileToDataUrl(file)
+      .then((dataUrl) => {
+        img.src = dataUrl;
+      })
+      .catch(reject);
   });
 }
 
@@ -143,8 +186,12 @@ export default function DiagnosticPage() {
   const [followUp, setFollowUp] = useState('');
   const [result, setResult] = useState<DiagnosticResult | null>(null);
   const [error, setError] = useState('');
+  const [logoError, setLogoError] = useState('');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [pdfLogo, setPdfLogo] = useState<string | null>(null);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const loadingInterval = useRef<ReturnType<typeof setInterval>>();
 
   const getDiagCount = () => {
@@ -212,6 +259,150 @@ export default function DiagnosticPage() {
     }
   };
 
+  const handleLogoUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    if (!file.type.startsWith('image/')) {
+      setLogoError('Veuillez sélectionner un fichier image (PNG, JPG ou WEBP).');
+      return;
+    }
+
+    try {
+      const compressedLogo = await compressLogoImage(file);
+      setPdfLogo(compressedLogo);
+      setLogoError('');
+      localStorage.setItem(PDF_LOGO_KEY, compressedLogo);
+      track('diagnostic_logo_uploaded');
+    } catch {
+      setLogoError('Le logo n a pas pu être chargé. Réessayez avec une autre image.');
+    }
+  };
+
+  const removeLogo = () => {
+    setPdfLogo(null);
+    setLogoError('');
+    localStorage.removeItem(PDF_LOGO_KEY);
+  };
+
+  const handlePdfDownload = async () => {
+    if (!result) return;
+    setIsExportingPdf(true);
+
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const marginX = 14;
+      const marginY = 16;
+      const contentWidth = pageWidth - marginX * 2;
+      let cursorY = marginY;
+
+      const addPageBackground = () => {
+        doc.setFillColor(250, 248, 244);
+        doc.rect(0, 0, pageWidth, pageHeight, 'F');
+      };
+
+      const ensureSpace = (requiredHeight: number) => {
+        if (cursorY + requiredHeight > pageHeight - marginY) {
+          doc.addPage();
+          addPageBackground();
+          cursorY = marginY;
+        }
+      };
+
+      const drawSection = (title: string, lines: string[], color: [number, number, number]) => {
+        const titleLines = doc.splitTextToSize(title, contentWidth - 8) as string[];
+        const titleHeight = Math.max(6, titleLines.length * 5.5);
+        const bodyHeight = Math.max(8, lines.length * 5.1);
+        const sectionHeight = 10 + titleHeight + 4 + bodyHeight;
+
+        ensureSpace(sectionHeight + 4);
+
+        doc.setDrawColor(232, 228, 220);
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(marginX, cursorY, contentWidth, sectionHeight, 3, 3, 'FD');
+
+        doc.setFillColor(...color);
+        doc.roundedRect(marginX, cursorY, contentWidth, 5, 3, 3, 'F');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(28, 36, 32);
+        doc.setFontSize(13);
+        const titleY = cursorY + 11;
+        doc.text(titleLines, marginX + 4, titleY);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(61, 74, 58);
+        doc.setFontSize(10.5);
+        doc.text(lines, marginX + 4, titleY + titleHeight + 1.5);
+
+        cursorY += sectionHeight + 5;
+      };
+
+      addPageBackground();
+      doc.setTextColor(28, 36, 32);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(17);
+      doc.text('Rapport de diagnostic de peau', marginX, cursorY + 2);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9.5);
+      doc.setTextColor(95, 108, 95);
+      doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')}`, marginX, cursorY + 8);
+
+      if (pdfLogo) {
+        const logoFormat = pdfLogo.includes('image/png') ? 'PNG' : 'JPEG';
+        const logoWidth = 30;
+        const logoHeight = 16;
+        doc.addImage(pdfLogo, logoFormat, pageWidth - marginX - logoWidth, cursorY - 1, logoWidth, logoHeight, undefined, 'FAST');
+      }
+
+      cursorY += 16;
+
+      const diagnosisLines = doc.splitTextToSize(result.diagnosis.summary, contentWidth - 8) as string[];
+      drawSection(result.diagnosis.title, diagnosisLines, [139, 158, 110]);
+
+      if (result.diagnosis.findings.length > 0) {
+        result.diagnosis.findings.forEach((finding) => {
+          const findingBody = [
+            `Zone(s): ${finding.zones}`,
+            `Intensité: ${finding.severity}`,
+            '',
+            finding.description,
+          ].join('\n');
+          const lines = doc.splitTextToSize(findingBody, contentWidth - 8) as string[];
+          drawSection(finding.title, lines, [93, 124, 255]);
+        });
+      }
+
+      const routineText = result.routine.items.map((item) => `${item.label}: ${item.description}`).join('\n\n');
+      const routineLines = doc.splitTextToSize(routineText || 'Aucune recommandation de routine.', contentWidth - 8) as string[];
+      drawSection(result.routine.title, routineLines, [119, 196, 123]);
+
+      const productsText = result.products.items
+        .map((item) => `${item.name} (${item.badge}${item.accent ? `, ${item.accent}` : ''})\n${item.description}`)
+        .join('\n\n');
+      const productsLines = doc.splitTextToSize(productsText || 'Aucune recommandation produit.', contentWidth - 8) as string[];
+      drawSection(result.products.title, productsLines, [229, 154, 58]);
+
+      ensureSpace(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(110, 122, 106);
+      doc.text('Document informatif - ne remplace pas un avis médical.', marginX, pageHeight - 10);
+
+      const fileDate = new Date().toISOString().slice(0, 10);
+      doc.save(`rapport-diagnostic-peau-${fileDate}.pdf`);
+      track('diagnostic_pdf_downloaded');
+    } catch {
+      setError('Impossible de générer le PDF pour le moment.');
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
   useEffect(() => {
     setMounted(true);
     try {
@@ -225,6 +416,8 @@ export default function DiagnosticPage() {
       }
 
       setIsProCustomer(localStorage.getItem(PRO_CUSTOMER_KEY) === 'true');
+      const savedLogo = localStorage.getItem(PDF_LOGO_KEY);
+      if (savedLogo) setPdfLogo(savedLogo);
     } catch {
       setIsProCustomer(false);
     }
@@ -386,6 +579,63 @@ export default function DiagnosticPage() {
               <div style={{ padding: '1.25rem 1.75rem', background: 'linear-gradient(135deg, #EBF0E4, #F5F2EC)', borderRadius: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
                 <svg fill="none" height="20" stroke="#8B9E6E" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" viewBox="0 0 24 24" width="20"><polyline points="20 6 9 17 4 12" /></svg>
                 <span style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.05rem', fontWeight: 600, color: '#1C2420' }}>Votre diagnostic est prêt !</span>
+              </div>
+
+              <div style={{ ...sharedCard, padding: '1.15rem 1.25rem' }}>
+                <input
+                  ref={logoInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/jpg"
+                  style={{ display: 'none' }}
+                  onChange={(e) => handleLogoUpload(e.target.files)}
+                />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <div>
+                    <p style={{ fontFamily: "'Playfair Display', serif", fontSize: '1rem', fontWeight: 600, color: '#1C2420', margin: 0 }}>
+                      Rapport PDF personnalisé
+                    </p>
+                    <p style={{ fontSize: '0.8rem', color: '#6D7A6A', margin: '0.35rem 0 0' }}>
+                      Apposez votre logo sur le rapport pour renforcer votre image professionnelle.
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => logoInputRef.current?.click()}
+                      style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 600, color: '#1C2420', border: '1px solid #C9D2BE', borderRadius: 999, background: '#F7FAF4', padding: '0.55rem 0.95rem', cursor: 'pointer' }}
+                    >
+                      {pdfLogo ? 'Remplacer le logo' : 'Uploader un logo'}
+                    </button>
+
+                    {pdfLogo && (
+                      <button
+                        onClick={removeLogo}
+                        style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 600, color: '#6D7A6A', border: '1px solid #DCD6CC', borderRadius: 999, background: 'white', padding: '0.55rem 0.95rem', cursor: 'pointer' }}
+                      >
+                        Retirer le logo
+                      </button>
+                    )}
+
+                    <button
+                      onClick={handlePdfDownload}
+                      disabled={isExportingPdf}
+                      style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 700, color: 'white', border: 'none', borderRadius: 999, background: 'linear-gradient(135deg, #8B9E6E, #6B7C54)', padding: '0.55rem 0.95rem', cursor: isExportingPdf ? 'default' : 'pointer', opacity: isExportingPdf ? 0.75 : 1 }}
+                    >
+                      {isExportingPdf ? 'Génération PDF...' : 'Télécharger le PDF'}
+                    </button>
+                  </div>
+                </div>
+
+                {pdfLogo && (
+                  <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={pdfLogo} alt="Logo entreprise" style={{ width: 64, height: 40, objectFit: 'contain', background: '#FAFAF7', border: '1px solid #E8E4DC', borderRadius: 8, padding: 4 }} />
+                    <span style={{ fontSize: '0.75rem', color: '#6D7A6A' }}>Ce logo sera apposé sur le PDF.</span>
+                  </div>
+                )}
+
+                {logoError && <p style={{ margin: '0.75rem 0 0', fontSize: '0.8rem', color: '#DC2626' }}>{logoError}</p>}
               </div>
 
               <section style={{ ...sharedCard, background: reportThemes.diagnosis.surface, borderColor: reportThemes.diagnosis.border, boxShadow: '0 8px 24px rgba(33,64,122,0.06)' }}>

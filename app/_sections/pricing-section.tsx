@@ -31,7 +31,7 @@ export default function PricingSection() {
               <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '1rem', color: '#7A8876' }}>/mois</span>
             </div>
             <div style={{ marginBottom: '2rem' }}>
-              {['50 diagnostics / mois', 'Support email', 'Rapport PDF personnalisé', 'Accès sans installation'].map((f) => (
+              {['50 diagnostics / mois', 'Support email', 'Rapport PDF', 'Accès sans installation'].map((f) => (
                 <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '0.75rem' }}>
                   {checkIcon}<span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.875rem', color: '#3D4A3A' }}>{f}</span>
                 </div>
