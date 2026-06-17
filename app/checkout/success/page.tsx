@@ -1,8 +1,19 @@
+"use client";
+
+import { useEffect } from 'react';
 import Link from 'next/link';
 import SiteHeader from '@/app/_components/site-header';
 import SiteFooter from '@/app/_components/site-footer';
 
+const PRO_CUSTOMER_KEY = 'skinalyze_pro_customer';
+
 export default function CheckoutSuccessPage() {
+  useEffect(() => {
+    try {
+      localStorage.setItem(PRO_CUSTOMER_KEY, 'true');
+    } catch {}
+  }, []);
+
   return (
     <>
       <SiteHeader />

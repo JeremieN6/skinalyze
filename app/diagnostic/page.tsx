@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 const DIAG_COUNT_KEY = 'skinalyze_diag_count';
 const USER_ID_KEY = 'skinalyze_user_id';
+const PRO_CUSTOMER_KEY = 'skinalyze_pro_customer';
 const FREE_QUOTA = 3;
 
 function getUserId(): string {
@@ -133,6 +134,7 @@ function normalizeDiagnosticResult(raw: DiagnosticResult | LegacyDiagnosticResul
 
 export default function DiagnosticPage() {
   const [mounted, setMounted] = useState(false);
+  const [isProCustomer, setIsProCustomer] = useState(false);
   const [step, setStep] = useState<Step>('upload');
   const [images, setImages] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -169,11 +171,11 @@ export default function DiagnosticPage() {
   const startAnalysis = async () => {
     if (!images.length) return;
     const count = getDiagCount();
-    if (!BYPASS_QUOTA && count >= FREE_QUOTA) {
+    if (!BYPASS_QUOTA && !isProCustomer && count >= FREE_QUOTA) {
       setShowPremiumModal(true);
       return;
     }
-    if (!BYPASS_QUOTA) incrementDiagCount();
+    if (!BYPASS_QUOTA && !isProCustomer) incrementDiagCount();
     track('diagnostic_started');
     setStep('loading');
     setLoadingProgress(0);
@@ -212,6 +214,21 @@ export default function DiagnosticPage() {
 
   useEffect(() => {
     setMounted(true);
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const proParam = params.get('pro');
+
+      if (proParam === '1') {
+        localStorage.setItem(PRO_CUSTOMER_KEY, 'true');
+      } else if (proParam === '0') {
+        localStorage.removeItem(PRO_CUSTOMER_KEY);
+      }
+
+      setIsProCustomer(localStorage.getItem(PRO_CUSTOMER_KEY) === 'true');
+    } catch {
+      setIsProCustomer(false);
+    }
+
     return () => { if (loadingInterval.current) clearInterval(loadingInterval.current); };
   }, []);
 
@@ -272,7 +289,7 @@ export default function DiagnosticPage() {
           </div>
 
           {/* Free quota banner */}
-          {step === 'upload' && mounted && !BYPASS_QUOTA && (
+          {step === 'upload' && mounted && !BYPASS_QUOTA && !isProCustomer && (
             <div style={{ marginBottom: '1.5rem', padding: '10px 16px', background: '#EBF0E4', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
               <svg fill="none" height="14" stroke="#8B9E6E" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="14"><circle cx="12" cy="12" r="10" /><path d="M12 8v4l3 3" /></svg>
               <span style={{ fontSize: '0.78rem', color: '#6B7C54', fontWeight: 500 }}>
@@ -451,23 +468,24 @@ export default function DiagnosticPage() {
                 </div>
               </section>
 
-              {/* B2B CTA block */}
-              <div style={{ padding: '2.25rem', borderRadius: 20, background: 'linear-gradient(160deg, #1C2420, #3D4A3A)', textAlign: 'center' }}>
-                <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.4rem', fontWeight: 700, color: 'white', margin: '0 0 0.75rem' }}>
-                  Vous êtes professionnel ?
-                </h3>
-                <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.65, margin: '0 0 1.75rem', maxWidth: 460, marginLeft: 'auto', marginRight: 'auto' }}>
-                  Proposez ce diagnostic à tous vos clients. Intégration immédiate, sans installation, sans engagement.
-                </p>
-                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <a href={STRIPE_STARTER} target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: '#1C2420', background: 'white', padding: '0.8rem 1.75rem', borderRadius: 50, textDecoration: 'none' }}>
-                    Starter — 59€/mois
-                  </a>
-                  <a href={STRIPE_PRO} target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)', padding: '0.8rem 1.75rem', borderRadius: 50, textDecoration: 'none', border: '1.5px solid rgba(255,255,255,0.4)' }}>
-                    Pro — 149€/mois
-                  </a>
+              {!isProCustomer && (
+                <div style={{ padding: '2.25rem', borderRadius: 20, background: 'linear-gradient(160deg, #1C2420, #3D4A3A)', textAlign: 'center' }}>
+                  <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.4rem', fontWeight: 700, color: 'white', margin: '0 0 0.75rem' }}>
+                    Vous êtes professionnel ?
+                  </h3>
+                  <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.65, margin: '0 0 1.75rem', maxWidth: 460, marginLeft: 'auto', marginRight: 'auto' }}>
+                    Proposez ce diagnostic à tous vos clients. Intégration immédiate, sans installation, sans engagement.
+                  </p>
+                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <a href={STRIPE_STARTER} target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: '#1C2420', background: 'white', padding: '0.8rem 1.75rem', borderRadius: 50, textDecoration: 'none' }}>
+                      Starter — 59€/mois
+                    </a>
+                    <a href={STRIPE_PRO} target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)', padding: '0.8rem 1.75rem', borderRadius: 50, textDecoration: 'none', border: '1.5px solid rgba(255,255,255,0.4)' }}>
+                      Pro — 149€/mois
+                    </a>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <button
                 onClick={() => { setImages([]); setResult(null); setFollowUp(''); setStep('upload'); }}
@@ -481,7 +499,7 @@ export default function DiagnosticPage() {
       </div>
 
       {/* Premium Modal */}
-      {showPremiumModal && (
+      {showPremiumModal && !isProCustomer && (
         <div
           style={{ position: 'fixed', inset: 0, background: 'rgba(28,36,32,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}
           onClick={(e) => { if (e.target === e.currentTarget) setShowPremiumModal(false); }}
