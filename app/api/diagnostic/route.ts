@@ -1,13 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { getOrCreateUser, getQuotaAndRemaining, recordUsage } from '@/lib/subscriptions';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(req: NextRequest) {
   try {
-    const { images, followUp } = await req.json();
+    const payload = await req.json();
+    const { images, followUp, userId: clientUserId } = payload;
     if (!images || !Array.isArray(images) || images.length === 0) {
       return NextResponse.json({ error: 'No images provided' }, { status: 400 });
+    }
+
+    // Server-side quota enforcement if userId provided
+    let serverUserId: string | null = null;
+    if (clientUserId) {
+      const user = await getOrCreateUser(clientUserId);
+      serverUserId = user?.user_id ?? null;
+      if (serverUserId) {
+        const quota = await getQuotaAndRemaining(serverUserId);
+        if (quota.quota !== -1 && quota.remaining <= 0) {
+          return NextResponse.json({ error: 'Quota exceeded' }, { status: 402 });
+        }
+      }
     }
 
     // Build image content blocks from base64 data URLs
@@ -87,6 +102,15 @@ Pour chaque section, fournis un contenu détaillé, concret et personnalisé. Da
     // Strip potential markdown code fences
     const raw = textContent.text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     const parsed = JSON.parse(raw);
+
+    // record usage after successful parse (if server-side user present)
+    try {
+      if (serverUserId) {
+        await recordUsage(serverUserId);
+      }
+    } catch (e) {
+      console.warn('Failed to record usage', e);
+    }
 
     return NextResponse.json(parsed);
   } catch (err) {

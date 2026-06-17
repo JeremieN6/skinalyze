@@ -178,6 +178,8 @@ function normalizeDiagnosticResult(raw: DiagnosticResult | LegacyDiagnosticResul
 export default function DiagnosticPage() {
   const [mounted, setMounted] = useState(false);
   const [isProCustomer, setIsProCustomer] = useState(false);
+  const [serverQuota, setServerQuota] = useState<null | { plan: string; quota: number | -1; used: number; remaining: number | -1 }>(null);
+  const [useServerTracking, setUseServerTracking] = useState(false);
   const [step, setStep] = useState<Step>('upload');
   const [images, setImages] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -217,12 +219,25 @@ export default function DiagnosticPage() {
 
   const startAnalysis = async () => {
     if (!images.length) return;
-    const count = getDiagCount();
-    if (!BYPASS_QUOTA && !isProCustomer && count >= FREE_QUOTA) {
-      setShowPremiumModal(true);
-      return;
+
+    // Quota enforcement: prefer server-side when available, otherwise localStorage fallback
+    if (!BYPASS_QUOTA && !isProCustomer) {
+      if (useServerTracking && serverQuota) {
+        if (serverQuota.quota !== -1 && serverQuota.remaining <= 0) {
+          setShowPremiumModal(true);
+          return;
+        }
+        // server will record usage after successful analysis
+      } else {
+        const count = getDiagCount();
+        if (count >= FREE_QUOTA) {
+          setShowPremiumModal(true);
+          return;
+        }
+        incrementDiagCount();
+      }
     }
-    if (!BYPASS_QUOTA && !isProCustomer) incrementDiagCount();
+
     track('diagnostic_started');
     setStep('loading');
     setLoadingProgress(0);
@@ -240,19 +255,35 @@ export default function DiagnosticPage() {
     }, 400);
 
     try {
+      const body: any = { images, followUp };
+      if (useServerTracking) body.userId = getUserId();
+
       const res = await fetch('/api/diagnostic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ images, followUp }),
+        body: JSON.stringify(body),
       });
       clearInterval(loadingInterval.current);
       setLoadingProgress(100);
+      if (res.status === 402) {
+        setShowPremiumModal(true);
+        setStep('upload');
+        return;
+      }
       if (!res.ok) throw new Error('API error');
       const data = await res.json();
       setResult(normalizeDiagnosticResult(data));
       track('diagnostic_completed');
       setTimeout(() => setStep('results'), 400);
-    } catch {
+
+      // refresh server quota after success
+      if (useServerTracking) {
+        try {
+          const qres = await fetch(`/api/quota?userId=${getUserId()}`);
+          if (qres.ok) setServerQuota(await qres.json());
+        } catch {}
+      }
+    } catch (err) {
       clearInterval(loadingInterval.current);
       setError("Une erreur est survenue. Veuillez réessayer.");
       setStep('upload');
@@ -418,6 +449,23 @@ export default function DiagnosticPage() {
       setIsProCustomer(localStorage.getItem(PRO_CUSTOMER_KEY) === 'true');
       const savedLogo = localStorage.getItem(PDF_LOGO_KEY);
       if (savedLogo) setPdfLogo(savedLogo);
+      // try to fetch server quota for this userId
+      (async () => {
+        try {
+          const res = await fetch(`/api/quota?userId=${getUserId()}`);
+          if (!res.ok) {
+            setUseServerTracking(false);
+            setServerQuota(null);
+            return;
+          }
+          const q = await res.json();
+          setServerQuota(q);
+          setUseServerTracking(true);
+        } catch {
+          setUseServerTracking(false);
+          setServerQuota(null);
+        }
+      })();
     } catch {
       setIsProCustomer(false);
     }
@@ -486,7 +534,9 @@ export default function DiagnosticPage() {
             <div style={{ marginBottom: '1.5rem', padding: '10px 16px', background: '#EBF0E4', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
               <svg fill="none" height="14" stroke="#8B9E6E" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="14"><circle cx="12" cy="12" r="10" /><path d="M12 8v4l3 3" /></svg>
               <span style={{ fontSize: '0.78rem', color: '#6B7C54', fontWeight: 500 }}>
-                {Math.max(0, FREE_QUOTA - getDiagCount())} diagnostic{Math.max(0, FREE_QUOTA - getDiagCount()) !== 1 ? 's' : ''} gratuit{Math.max(0, FREE_QUOTA - getDiagCount()) !== 1 ? 's' : ''} restant{Math.max(0, FREE_QUOTA - getDiagCount()) !== 1 ? 's' : ''}
+                {useServerTracking && serverQuota
+                  ? (serverQuota.quota === -1 ? 'Diagnostics illimités' : `${serverQuota.remaining} diagnostic${serverQuota.remaining !== 1 ? 's' : ''} restants ce mois`)
+                  : `${Math.max(0, FREE_QUOTA - getDiagCount())} diagnostic${Math.max(0, FREE_QUOTA - getDiagCount()) !== 1 ? 's' : ''} gratuit${Math.max(0, FREE_QUOTA - getDiagCount()) !== 1 ? 's' : ''} restant${Math.max(0, FREE_QUOTA - getDiagCount()) !== 1 ? 's' : ''}`}
               </span>
             </div>
           )}
@@ -762,7 +812,7 @@ export default function DiagnosticPage() {
               Quota gratuit atteint
             </h3>
             <p style={{ fontSize: '0.9rem', color: '#7A8876', lineHeight: 1.65, margin: '0 0 2rem' }}>
-              Vous avez utilisé vos {FREE_QUOTA} diagnostics gratuits. Passez à un abonnement pour continuer avec des diagnostics illimités.
+              Vous avez utilisé vos {FREE_QUOTA} diagnostics gratuits. Passez à un abonnement pour continuer avec 50 diagnostics par mois en Starter ou 150 diagnostics par mois en Pro.
             </p>
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
               <a href={STRIPE_STARTER} target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: 'white', background: 'linear-gradient(135deg, #8B9E6E, #6B7C54)', padding: '0.8rem 1.75rem', borderRadius: 50, textDecoration: 'none' }}>

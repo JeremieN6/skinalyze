@@ -6,11 +6,24 @@ import SiteHeader from '@/app/_components/site-header';
 import SiteFooter from '@/app/_components/site-footer';
 
 const PRO_CUSTOMER_KEY = 'skinalyze_pro_customer';
+const USER_ID_KEY = 'skinalyze_user_id';
 
 export default function CheckoutSuccessPage() {
   useEffect(() => {
     try {
       localStorage.setItem(PRO_CUSTOMER_KEY, 'true');
+
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get('session_id');
+      const userId = localStorage.getItem(USER_ID_KEY);
+
+      if (sessionId && userId) {
+        fetch('/api/stripe/link-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, userId }),
+        }).catch(() => {});
+      }
     } catch {}
   }, []);
 
