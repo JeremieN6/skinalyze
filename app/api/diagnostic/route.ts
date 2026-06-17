@@ -29,25 +29,45 @@ Analyse la/les photo(s) de peau fournie(s) et génère un rapport structuré en 
 
 Réponds UNIQUEMENT avec un JSON valide dans ce format exact (sans markdown, sans explication autour) :
 {
-  "diagnostic": {
-    "title": "Analyse dermatologique",
-    "content": "..."
+  "diagnosis": {
+    "title": "Ce qu'on observe sur votre peau",
+    "summary": "...",
+    "findings": [
+      {
+        "title": "...",
+        "zones": "Zones : ...",
+        "severity": "Modéré",
+        "description": "..."
+      }
+    ]
   },
   "routine": {
-    "title": "Routine cosmétologique recommandée",
-    "content": "..."
+    "title": "Votre routine personnalisée",
+    "items": [
+      {
+        "label": "Protection solaire",
+        "description": "..."
+      }
+    ]
   },
   "products": {
-    "title": "Recommandations produits & bien-être",
-    "content": "..."
+    "title": "Les produits qu'il vous faut",
+    "items": [
+      {
+        "name": "Nettoyant doux",
+        "badge": "soir",
+        "accent": "Acide salicylique 0.5-2%",
+        "description": "..."
+      }
+    ]
   }
 }
 
-Pour chaque section, fournis un contenu détaillé et personnalisé d'environ 3-5 phrases.`;
+Pour chaque section, fournis un contenu détaillé, concret et personnalisé. Dans la première section, indique clairement la sévérité avec des valeurs courtes comme "Modéré" ou "Léger". Dans la dernière section, mets toujours un badge court comme "matin", "soir" ou "matin et soir", puis une ligne d'accent courte sous le nom du produit.`;
 
     const response = await client.messages.create({
       model: 'claude-opus-4-5',
-      max_tokens: 1200,
+      max_tokens: 3000,
       messages: [
         {
           role: 'user',

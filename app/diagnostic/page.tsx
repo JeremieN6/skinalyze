@@ -60,13 +60,75 @@ const LOADING_MESSAGES = [
 
 const STRIPE_STARTER = process.env.NEXT_PUBLIC_STRIPE_STARTER_LINK || 'https://buy.stripe.com/00weVe0v27uTbCWboTePi2c';
 const STRIPE_PRO = process.env.NEXT_PUBLIC_STRIPE_PRO_LINK || 'https://buy.stripe.com/cNi9AU91y8yX36qakPePi2d';
+const BYPASS_QUOTA = process.env.NEXT_PUBLIC_BYPASS_QUOTA === 'true';
 
 type Step = 'upload' | 'loading' | 'followup' | 'results';
 
+interface DiagnosticFinding {
+  title: string;
+  zones: string;
+  severity: string;
+  description: string;
+}
+
+interface RoutineItem {
+  label: string;
+  description: string;
+}
+
+interface ProductItem {
+  name: string;
+  badge: string;
+  accent: string;
+  description: string;
+}
+
 interface DiagnosticResult {
+  diagnosis: {
+    title: string;
+    summary: string;
+    findings: DiagnosticFinding[];
+  };
+  routine: {
+    title: string;
+    items: RoutineItem[];
+  };
+  products: {
+    title: string;
+    items: ProductItem[];
+  };
+}
+
+interface LegacyDiagnosticResult {
   diagnostic: { title: string; content: string };
   routine: { title: string; content: string };
   products: { title: string; content: string };
+}
+
+function normalizeDiagnosticResult(raw: DiagnosticResult | LegacyDiagnosticResult): DiagnosticResult {
+  if ('diagnosis' in raw) {
+    return raw;
+  }
+
+  return {
+    diagnosis: {
+      title: raw.diagnostic.title || "Ce qu'on observe sur votre peau",
+      summary: raw.diagnostic.content || '',
+      findings: [],
+    },
+    routine: {
+      title: raw.routine.title || 'Votre routine personnalisée',
+      items: raw.routine.content
+        ? [{ label: raw.routine.title || 'Routine', description: raw.routine.content }]
+        : [],
+    },
+    products: {
+      title: raw.products.title || "Les produits qu'il vous faut",
+      items: raw.products.content
+        ? [{ name: raw.products.title || 'Produit', badge: 'matin et soir', accent: '', description: raw.products.content }]
+        : [],
+    },
+  };
 }
 
 export default function DiagnosticPage() {
@@ -107,11 +169,11 @@ export default function DiagnosticPage() {
   const startAnalysis = async () => {
     if (!images.length) return;
     const count = getDiagCount();
-    if (count >= FREE_QUOTA) {
+    if (!BYPASS_QUOTA && count >= FREE_QUOTA) {
       setShowPremiumModal(true);
       return;
     }
-    incrementDiagCount();
+    if (!BYPASS_QUOTA) incrementDiagCount();
     track('diagnostic_started');
     setStep('loading');
     setLoadingProgress(0);
@@ -138,7 +200,7 @@ export default function DiagnosticPage() {
       setLoadingProgress(100);
       if (!res.ok) throw new Error('API error');
       const data = await res.json();
-      setResult(data);
+      setResult(normalizeDiagnosticResult(data));
       track('diagnostic_completed');
       setTimeout(() => setStep('results'), 400);
     } catch {
@@ -161,10 +223,43 @@ export default function DiagnosticPage() {
     boxShadow: '0 2px 12px rgba(28,36,32,0.06)',
   };
 
+  const reportThemes = {
+    diagnosis: {
+      surface: '#F3F7FF',
+      border: '#CFE0FF',
+      title: '#21407A',
+      text: '#415A7A',
+      accent: '#5D7CFF',
+      chipBg: '#EDF2FF',
+      chipText: '#4D66D8',
+      softCard: '#FFFFFF',
+    },
+    routine: {
+      surface: '#F3FAF1',
+      border: '#C3EAC8',
+      title: '#23462D',
+      text: '#4E6655',
+      accent: '#77C47B',
+      chipBg: '#EAF8EB',
+      chipText: '#4D9B57',
+      softCard: '#FFFFFF',
+    },
+    products: {
+      surface: '#FFF6EA',
+      border: '#F0D3A8',
+      title: '#7A4E18',
+      text: '#6A543C',
+      accent: '#E59A3A',
+      chipBg: '#FFF1D8',
+      chipText: '#C8861E',
+      softCard: '#FFFFFF',
+    },
+  } as const;
+
   return (
     <>
       <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg, #FAF8F4 0%, #EBF0E4 100%)', paddingTop: 90, paddingBottom: 60, fontFamily: 'Inter, sans-serif' }}>
-        <div style={{ maxWidth: 700, margin: '0 auto', padding: '0 1.5rem' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 1.5rem' }}>
           {/* Header */}
           <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
             <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#7A8876', textDecoration: 'none', marginBottom: '1.25rem' }}>
@@ -177,7 +272,7 @@ export default function DiagnosticPage() {
           </div>
 
           {/* Free quota banner */}
-          {step === 'upload' && mounted && (
+          {step === 'upload' && mounted && !BYPASS_QUOTA && (
             <div style={{ marginBottom: '1.5rem', padding: '10px 16px', background: '#EBF0E4', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
               <svg fill="none" height="14" stroke="#8B9E6E" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="14"><circle cx="12" cy="12" r="10" /><path d="M12 8v4l3 3" /></svg>
               <span style={{ fontSize: '0.78rem', color: '#6B7C54', fontWeight: 500 }}>
@@ -215,7 +310,7 @@ export default function DiagnosticPage() {
                 />
                 <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>📷</div>
                 <p style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.1rem', fontWeight: 600, color: '#1C2420', margin: '0 0 0.5rem' }}>
-                  {images.length === 0 ? 'Déposez vos photos ici' : 'Ajouter d\'autres photos'}
+                  {images.length === 0 ? 'Glissez vos photos ici ou cliquez pour parcourir' : 'Déposez vos photos ici'}
                 </p>
                 <p style={{ fontSize: '0.8rem', color: '#7A8876', margin: 0 }}>JPG, PNG, WEBP · Max 3 photos · Visage bien éclairé</p>
               </div>
@@ -235,11 +330,17 @@ export default function DiagnosticPage() {
                     ))}
                   </div>
                   {error && <p style={{ fontSize: '0.85rem', color: '#DC2626', marginBottom: '1rem' }}>{error}</p>}
-                  <button
+                  {/* <button
                     onClick={startAnalysis}
                     style={{ width: '100%', fontFamily: 'Inter, sans-serif', fontSize: '1rem', fontWeight: 700, color: 'white', background: 'linear-gradient(135deg, #8B9E6E, #6B7C54)', border: 'none', borderRadius: 50, padding: '1rem 2rem', cursor: 'pointer', letterSpacing: '0.02em', boxShadow: '0 4px 20px #8B9E6E45' }}
                   >
                     Lancer l&apos;analyse →
+                  </button> */}
+                  <button
+                    onClick={startAnalysis}
+                    style={{ width: '100%', fontFamily: 'Inter, sans-serif', fontSize: '1rem', fontWeight: 700, color: 'white', background: 'linear-gradient(135deg, #8B9E6E, #6B7C54)', border: 'none', borderRadius: 50, padding: '1rem 2rem', cursor: 'pointer', letterSpacing: '0.02em', boxShadow: '0 4px 20px #8B9E6E45' }}
+                  >
+                    🔬 Lancer l&apos;analyse de ma peau →
                   </button>
                 </>
               )}
@@ -270,19 +371,85 @@ export default function DiagnosticPage() {
                 <span style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.05rem', fontWeight: 600, color: '#1C2420' }}>Votre diagnostic est prêt !</span>
               </div>
 
-              {[
-                { key: 'diagnostic' as const, icon: '🔬', color: '#8B9E6E' },
-                { key: 'routine' as const, icon: '✨', color: '#C4975A' },
-                { key: 'products' as const, icon: '🧴', color: '#6B7C54' },
-              ].map(({ key, icon, color }) => (
-                <div key={key} style={sharedCard}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '1rem' }}>
-                    <span style={{ fontSize: '1.3rem' }}>{icon}</span>
-                    <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.15rem', fontWeight: 600, color: '#1C2420', margin: 0 }}>{result[key].title}</h3>
+              <section style={{ ...sharedCard, background: reportThemes.diagnosis.surface, borderColor: reportThemes.diagnosis.border, boxShadow: '0 8px 24px rgba(33,64,122,0.06)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: '1.25rem' }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 12, background: '#E4EEFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg fill="none" height="18" stroke={reportThemes.diagnosis.accent} strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24" width="18"><path d="M12 2v20" /><path d="M4 8h16" /><path d="M6 6v12" /><path d="M18 6v12" /></svg>
                   </div>
-                  <p style={{ fontSize: '0.9rem', color: '#3D4A3A', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>{result[key].content}</p>
+                  <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.2rem', fontWeight: 700, color: reportThemes.diagnosis.title, margin: 0 }}>{result.diagnosis.title}</h3>
                 </div>
-              ))}
+
+                <div style={{ background: reportThemes.diagnosis.softCard, borderRadius: 16, padding: '1rem 1.1rem', border: '1px solid rgba(95,124,255,0.08)', marginBottom: '1rem' }}>
+                  <p style={{ fontSize: '0.92rem', color: reportThemes.diagnosis.text, lineHeight: 1.7, margin: 0 }}>{result.diagnosis.summary}</p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {result.diagnosis.findings.map((finding, index) => (
+                    <div key={`${finding.title}-${index}`} style={{ background: '#FFFFFF', borderRadius: 16, padding: '1rem 1.1rem', border: '1px solid rgba(95,124,255,0.12)', boxShadow: '0 2px 10px rgba(33,64,122,0.04)' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                          <span style={{ color: reportThemes.diagnosis.accent, fontWeight: 700, lineHeight: 1 }}>&gt;</span>
+                          <h4 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1rem', fontWeight: 700, color: '#1C2420', margin: 0 }}>{finding.title}</h4>
+                        </div>
+                        <span style={{ flexShrink: 0, padding: '0.25rem 0.7rem', borderRadius: 999, background: reportThemes.diagnosis.chipBg, color: reportThemes.diagnosis.chipText, fontSize: '0.72rem', fontWeight: 700, lineHeight: 1.1 }}>{finding.severity}</span>
+                      </div>
+                      <p style={{ fontSize: '0.8rem', color: '#5E6C7A', margin: '0 0 0.35rem' }}>{finding.zones}</p>
+                      <p style={{ fontSize: '0.88rem', color: reportThemes.diagnosis.text, lineHeight: 1.7, margin: 0 }}>{finding.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section style={{ ...sharedCard, background: reportThemes.routine.surface, borderColor: reportThemes.routine.border, boxShadow: '0 8px 24px rgba(35,70,45,0.06)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: '1.25rem' }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 12, background: '#E1F2E2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg fill="none" height="18" stroke={reportThemes.routine.accent} strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24" width="18"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.53L12 21.35z" /></svg>
+                  </div>
+                  <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.2rem', fontWeight: 700, color: reportThemes.routine.title, margin: 0 }}>{result.routine.title}</h3>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {result.routine.items.map((item, index) => (
+                    <div key={`${item.label}-${index}`} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', background: '#FFFFFF', borderRadius: 16, padding: '1rem 1.1rem', border: '1px solid rgba(119,196,123,0.12)', boxShadow: '0 2px 10px rgba(35,70,45,0.04)' }}>
+                      <div style={{ width: 30, height: 30, borderRadius: 10, background: '#F2F6EC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <span style={{ fontSize: '0.9rem' }}>✦</span>
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: reportThemes.routine.accent, marginBottom: '0.25rem' }}>{item.label}</div>
+                        <p style={{ fontSize: '0.88rem', color: reportThemes.routine.text, lineHeight: 1.7, margin: 0 }}>{item.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section style={{ ...sharedCard, background: reportThemes.products.surface, borderColor: reportThemes.products.border, boxShadow: '0 8px 24px rgba(122,78,24,0.06)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: '1.25rem' }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 12, background: '#FFEAD0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg fill="none" height="18" stroke={reportThemes.products.accent} strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24" width="18"><path d="M19 7.5V21H5V7.5" /><path d="M8 7.5V5a4 4 0 0 1 8 0v2.5" /><path d="M9 12h6" /></svg>
+                  </div>
+                  <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.2rem', fontWeight: 700, color: reportThemes.products.title, margin: 0 }}>{result.products.title}</h3>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.9rem' }}>
+                  {result.products.items.map((item, index) => (
+                    <article key={`${item.name}-${index}`} style={{ background: '#FFFFFF', borderRadius: 16, padding: '1rem 1.1rem 1.05rem', border: '1px solid rgba(229,154,58,0.14)', boxShadow: '0 2px 10px rgba(122,78,24,0.04)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, marginBottom: '0.55rem' }}>
+                        <h4 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1rem', fontWeight: 700, color: '#1C2420', margin: 0 }}>{item.name}</h4>
+                        <span style={{ flexShrink: 0, padding: '0.25rem 0.7rem', borderRadius: 999, background: reportThemes.products.chipBg, color: reportThemes.products.chipText, fontSize: '0.72rem', fontWeight: 700, lineHeight: 1.1 }}>{item.badge}</span>
+                      </div>
+
+                      {item.accent && (
+                        <div style={{ marginBottom: '0.7rem' }}>
+                          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: reportThemes.products.accent, borderBottom: `1px solid ${reportThemes.products.accent}66`, paddingBottom: 1 }}>{item.accent}</span>
+                        </div>
+                      )}
+
+                      <p style={{ fontSize: '0.88rem', color: reportThemes.products.text, lineHeight: 1.7, margin: 0 }}>{item.description}</p>
+                    </article>
+                  ))}
+                </div>
+              </section>
 
               {/* B2B CTA block */}
               <div style={{ padding: '2.25rem', borderRadius: 20, background: 'linear-gradient(160deg, #1C2420, #3D4A3A)', textAlign: 'center' }}>
