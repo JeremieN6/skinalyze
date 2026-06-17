@@ -102,8 +102,6 @@ const LOADING_MESSAGES = [
   "Génération de votre rapport personnalisé…",
 ];
 
-const STRIPE_STARTER = process.env.NEXT_PUBLIC_STRIPE_STARTER_LINK || 'https://buy.stripe.com/00weVe0v27uTbCWboTePi2c';
-const STRIPE_PRO = process.env.NEXT_PUBLIC_STRIPE_PRO_LINK || 'https://buy.stripe.com/cNi9AU91y8yX36qakPePi2d';
 const BYPASS_QUOTA = process.env.NEXT_PUBLIC_BYPASS_QUOTA === 'true';
 
 type Step = 'upload' | 'loading' | 'followup' | 'results';
@@ -195,6 +193,16 @@ export default function DiagnosticPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const loadingInterval = useRef<ReturnType<typeof setInterval>>();
+
+  const getCheckoutUrl = (plan: 'starter' | 'pro') => {
+    const base = `/api/stripe/checkout?plan=${plan}`;
+    if (!mounted) return base;
+    try {
+      return `${base}&userId=${encodeURIComponent(getUserId())}`;
+    } catch {
+      return base;
+    }
+  };
 
   const getDiagCount = () => {
     if (typeof window === 'undefined') return 0;
@@ -777,10 +785,10 @@ export default function DiagnosticPage() {
                     Proposez ce diagnostic à tous vos clients. Intégration immédiate, sans installation, sans engagement.
                   </p>
                   <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                    <a href={STRIPE_STARTER} target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: '#1C2420', background: 'white', padding: '0.8rem 1.75rem', borderRadius: 50, textDecoration: 'none' }}>
+                    <a href={getCheckoutUrl('starter')} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: '#1C2420', background: 'white', padding: '0.8rem 1.75rem', borderRadius: 50, textDecoration: 'none' }}>
                       Starter — 59€/mois
                     </a>
-                    <a href={STRIPE_PRO} target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)', padding: '0.8rem 1.75rem', borderRadius: 50, textDecoration: 'none', border: '1.5px solid rgba(255,255,255,0.4)' }}>
+                    <a href={getCheckoutUrl('pro')} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)', padding: '0.8rem 1.75rem', borderRadius: 50, textDecoration: 'none', border: '1.5px solid rgba(255,255,255,0.4)' }}>
                       Pro — 149€/mois
                     </a>
                   </div>
@@ -815,10 +823,10 @@ export default function DiagnosticPage() {
               Vous avez utilisé vos {FREE_QUOTA} diagnostics gratuits. Passez à un abonnement pour continuer avec 50 diagnostics par mois en Starter ou 150 diagnostics par mois en Pro.
             </p>
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <a href={STRIPE_STARTER} target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: 'white', background: 'linear-gradient(135deg, #8B9E6E, #6B7C54)', padding: '0.8rem 1.75rem', borderRadius: 50, textDecoration: 'none' }}>
+              <a href={getCheckoutUrl('starter')} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: 'white', background: 'linear-gradient(135deg, #8B9E6E, #6B7C54)', padding: '0.8rem 1.75rem', borderRadius: 50, textDecoration: 'none' }}>
                 Starter — 59€/mois
               </a>
-              <a href={STRIPE_PRO} target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: '#1C2420', padding: '0.8rem 1.75rem', borderRadius: 50, textDecoration: 'none', border: '1.5px solid #8B9E6E50' }}>
+              <a href={getCheckoutUrl('pro')} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', fontWeight: 600, color: '#1C2420', padding: '0.8rem 1.75rem', borderRadius: 50, textDecoration: 'none', border: '1.5px solid #8B9E6E50' }}>
                 Pro — 149€/mois
               </a>
             </div>

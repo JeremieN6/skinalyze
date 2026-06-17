@@ -1,5 +1,5 @@
-const STRIPE_STARTER = process.env.NEXT_PUBLIC_STRIPE_STARTER_LINK || 'https://buy.stripe.com/00weVe0v27uTbCWboTePi2c';
-const STRIPE_PRO = process.env.NEXT_PUBLIC_STRIPE_PRO_LINK || 'https://buy.stripe.com/cNi9AU91y8yX36qakPePi2d';
+const STRIPE_STARTER = '/api/stripe/checkout?plan=starter';
+const STRIPE_PRO = '/api/stripe/checkout?plan=pro';
 
 const checkIcon = (
   <svg fill="none" height="16" stroke="#8B9E6E" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" viewBox="0 0 24 24" width="16">
@@ -37,7 +37,7 @@ export default function PricingSection() {
                 </div>
               ))}
             </div>
-            <a href={STRIPE_STARTER} target="_blank" rel="noopener noreferrer" style={{ display: 'block', textAlign: 'center', fontFamily: 'Inter, sans-serif', fontSize: '0.95rem', fontWeight: 600, color: '#FFFFFF', background: 'linear-gradient(135deg, #8B9E6E, #6B7C54)', padding: '0.85rem 1.5rem', borderRadius: 50, textDecoration: 'none', boxShadow: '0 4px 16px #8B9E6E40' }}>Commencer</a>
+            <a href={STRIPE_STARTER} style={{ display: 'block', textAlign: 'center', fontFamily: 'Inter, sans-serif', fontSize: '0.95rem', fontWeight: 600, color: '#FFFFFF', background: 'linear-gradient(135deg, #8B9E6E, #6B7C54)', padding: '0.85rem 1.5rem', borderRadius: 50, textDecoration: 'none', boxShadow: '0 4px 16px #8B9E6E40' }}>Commencer</a>
           </div>
 
           {/* Pro */}
@@ -57,7 +57,7 @@ export default function PricingSection() {
                 </div>
               ))}
             </div>
-            <a href={STRIPE_PRO} target="_blank" rel="noopener noreferrer" style={{ display: 'block', textAlign: 'center', fontFamily: 'Inter, sans-serif', fontSize: '0.95rem', fontWeight: 600, color: '#1C2420', background: 'white', padding: '0.85rem 1.5rem', borderRadius: 50, textDecoration: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}>Choisir Pro</a>
+            <a href={STRIPE_PRO} style={{ display: 'block', textAlign: 'center', fontFamily: 'Inter, sans-serif', fontSize: '0.95rem', fontWeight: 600, color: '#1C2420', background: 'white', padding: '0.85rem 1.5rem', borderRadius: 50, textDecoration: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}>Choisir Pro</a>
           </div>
         </div>
 
