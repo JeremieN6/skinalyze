@@ -9,6 +9,13 @@ const PRO_CUSTOMER_KEY = 'skinalyze_pro_customer';
 const PDF_LOGO_KEY = 'skinalyze_pdf_logo';
 const FREE_QUOTA = 3;
 
+interface AuthState {
+  authenticated: boolean;
+  userId?: string;
+  email?: string | null;
+  plan?: string;
+}
+
 function getUserId(): string {
   let uid = localStorage.getItem(USER_ID_KEY);
   if (!uid) {
@@ -176,8 +183,19 @@ function normalizeDiagnosticResult(raw: DiagnosticResult | LegacyDiagnosticResul
 export default function DiagnosticPage() {
   const [mounted, setMounted] = useState(false);
   const [isProCustomer, setIsProCustomer] = useState(false);
+  const [auth, setAuth] = useState<AuthState>({ authenticated: false });
+  const [authEmail, setAuthEmail] = useState('');
+  const [authCode, setAuthCode] = useState('');
+  const [authStep, setAuthStep] = useState<'idle' | 'code-sent'>('idle');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authMessage, setAuthMessage] = useState('');
   const [serverQuota, setServerQuota] = useState<null | { plan: string; quota: number | -1; used: number; remaining: number | -1 }>(null);
   const [useServerTracking, setUseServerTracking] = useState(false);
+  const [authEmail, setAuthEmail] = useState('');
+  const [authCode, setAuthCode] = useState('');
+  const [authCodeSent, setAuthCodeSent] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authMessage, setAuthMessage] = useState('');
   const [step, setStep] = useState<Step>('upload');
   const [images, setImages] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -194,11 +212,89 @@ export default function DiagnosticPage() {
   const logoInputRef = useRef<HTMLInputElement>(null);
   const loadingInterval = useRef<ReturnType<typeof setInterval>>();
 
+  const refreshAuthAndQuota = async () => {
+    try {
+      const meRes = await fetch('/api/auth/me');
+      const me = await meRes.json();
+
+      if (me?.authenticated) {
+        setAuth({
+          authenticated: true,
+          userId: me.userId,
+          email: me.email,
+          plan: me.plan,
+        });
+        setIsProCustomer(me.plan === 'pro');
+
+        const qRes = await fetch('/api/quota');
+        if (qRes.ok) {
+          setServerQuota(await qRes.json());
+          setUseServerTracking(true);
+        }
+        return true;
+      }
+    } catch {}
+
+    setAuth({ authenticated: false });
+    return false;
+  };
+
+  const requestAuthCode = async () => {
+    if (!authEmail.trim()) return;
+    setAuthLoading(true);
+    setAuthMessage('');
+    try {
+      const res = await fetch('/api/auth/request-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: authEmail }),
+      });
+      if (!res.ok) throw new Error('request-code failed');
+      setAuthStep('code-sent');
+      setAuthMessage('Un code vous a été envoyé par email.');
+    } catch {
+      setAuthMessage('Impossible d envoyer le code pour le moment.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const verifyAuthCode = async () => {
+    if (!authCode.trim()) return;
+    setAuthLoading(true);
+    setAuthMessage('');
+    try {
+      const res = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: authEmail, code: authCode }),
+      });
+      if (!res.ok) throw new Error('verify-code failed');
+      setAuthMessage('Connexion réussie.');
+      await refreshAuthAndQuota();
+    } catch {
+      setAuthMessage('Code invalide ou expiré.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {}
+    setAuth({ authenticated: false });
+    setUseServerTracking(false);
+    setServerQuota(null);
+    setIsProCustomer(false);
+  };
+
   const getCheckoutUrl = (plan: 'starter' | 'pro') => {
     const base = `/api/stripe/checkout?plan=${plan}`;
     if (!mounted) return base;
     try {
-      return `${base}&userId=${encodeURIComponent(getUserId())}`;
+      const id = auth.userId || getUserId();
+      return `${base}&userId=${encodeURIComponent(id)}`;
     } catch {
       return base;
     }
@@ -287,7 +383,7 @@ export default function DiagnosticPage() {
       // refresh server quota after success
       if (useServerTracking) {
         try {
-          const qres = await fetch(`/api/quota?userId=${getUserId()}`);
+          const qres = await fetch('/api/quota');
           if (qres.ok) setServerQuota(await qres.json());
         } catch {}
       }
@@ -457,8 +553,47 @@ export default function DiagnosticPage() {
       setIsProCustomer(localStorage.getItem(PRO_CUSTOMER_KEY) === 'true');
       const savedLogo = localStorage.getItem(PDF_LOGO_KEY);
       if (savedLogo) setPdfLogo(savedLogo);
-      // try to fetch server quota for this userId
+      // Prefer server session quota; fallback to local pseudo-user when not authenticated.
       (async () => {
+        try {
+          const sessionRes = await fetch('/api/auth/me');
+          if (sessionRes.ok) {
+            const me = await sessionRes.json();
+            setServerQuota(me.quota);
+            setUseServerTracking(true);
+            setIsProCustomer(me.quota?.plan === 'pro');
+            return;
+          }
+
+          const fallbackRes = await fetch(`/api/quota?userId=${getUserId()}`);
+          if (!fallbackRes.ok) {
+            setUseServerTracking(false);
+            setServerQuota(null);
+            return;
+          }
+          const q = await fallbackRes.json();
+          setServerQuota(q);
+          setUseServerTracking(true);
+        } catch {
+          setUseServerTracking(false);
+          setServerQuota(null);
+        }
+      })();
+    } catch {
+      setIsProCustomer(false);
+    }
+
+    return () => { if (loadingInterval.current) clearInterval(loadingInterval.current); };
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    (async () => {
+      const isAuthenticated = await refreshAuthAndQuota();
+
+      // Legacy fallback for anonymous users only.
+      if (!isAuthenticated) {
         try {
           const res = await fetch(`/api/quota?userId=${getUserId()}`);
           if (!res.ok) {
@@ -473,13 +608,69 @@ export default function DiagnosticPage() {
           setUseServerTracking(false);
           setServerQuota(null);
         }
-      })();
-    } catch {
-      setIsProCustomer(false);
-    }
+      }
+    })();
+  }, [mounted]);
 
-    return () => { if (loadingInterval.current) clearInterval(loadingInterval.current); };
-  }, []);
+  const requestAuthCode = async () => {
+    if (!authEmail.trim()) return;
+    setAuthLoading(true);
+    setAuthMessage('');
+    try {
+      const res = await fetch('/api/auth/request-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: authEmail }),
+      });
+      if (!res.ok) throw new Error('request failed');
+      setAuthCodeSent(true);
+      setAuthMessage('Code envoyé. Vérifiez votre boite mail.');
+    } catch {
+      setAuthMessage('Impossible d envoyer le code pour le moment.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const verifyAuthCode = async () => {
+    if (!authEmail.trim() || !authCode.trim()) return;
+    setAuthLoading(true);
+    setAuthMessage('');
+    try {
+      const res = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: authEmail, code: authCode }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'verify failed');
+      }
+
+      const meRes = await fetch('/api/auth/me');
+      if (meRes.ok) {
+        const me = await meRes.json();
+        setServerQuota(me.quota);
+        setUseServerTracking(true);
+        setIsProCustomer(me.quota?.plan === 'pro');
+        setAuthMessage('Connexion réussie. Vos avantages sont restaurés.');
+      }
+    } catch (e) {
+      setAuthMessage('Code invalide ou expiré.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const logoutAuth = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setUseServerTracking(false);
+      setAuthCode('');
+      setAuthCodeSent(false);
+      setAuthMessage('Session déconnectée sur cet appareil.');
+    } catch {}
+  };
 
   const sharedCard: React.CSSProperties = {
     background: '#FFFFFF',
@@ -537,6 +728,64 @@ export default function DiagnosticPage() {
             <p style={{ fontSize: '0.95rem', color: '#7A8876', lineHeight: 1.65, margin: 0 }}>Analyse assistée · 3 expertises · Résultat en 60 secondes</p>
           </div>
 
+          {/* Auth banner */}
+          {step === 'upload' && mounted && (
+            <div style={{ marginBottom: '1rem', padding: '12px 14px', background: '#FFFFFF', border: '1px solid #E8E4DC', borderRadius: 12 }}>
+              {auth.authenticated ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.82rem', color: '#41503F' }}>
+                    Connecté en tant que <strong>{auth.email || 'utilisateur'}</strong>
+                  </span>
+                  <button
+                    onClick={logout}
+                    style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', fontWeight: 600, color: '#4A5B46', border: '1px solid #C9D2BE', borderRadius: 999, background: '#F7FAF4', padding: '0.4rem 0.8rem', cursor: 'pointer' }}
+                  >
+                    Se déconnecter
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                  <p style={{ fontSize: '0.8rem', color: '#6B7C54', margin: 0 }}>
+                    Connectez-vous par email pour récupérer vos avantages sur tous vos appareils.
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <input
+                      value={authEmail}
+                      onChange={(e) => setAuthEmail(e.target.value)}
+                      placeholder="vous@exemple.com"
+                      style={{ flex: '1 1 220px', minWidth: 180, border: '1px solid #D5D0C8', borderRadius: 10, padding: '0.55rem 0.65rem', fontSize: '0.82rem', color: '#1C2420', background: '#FAFAF7' }}
+                    />
+                    <button
+                      onClick={requestAuthCode}
+                      disabled={authLoading}
+                      style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', fontWeight: 600, color: 'white', border: 'none', borderRadius: 999, background: 'linear-gradient(135deg, #8B9E6E, #6B7C54)', padding: '0.52rem 0.9rem', cursor: authLoading ? 'default' : 'pointer', opacity: authLoading ? 0.75 : 1 }}
+                    >
+                      Envoyer le code
+                    </button>
+                  </div>
+                  {authStep === 'code-sent' && (
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <input
+                        value={authCode}
+                        onChange={(e) => setAuthCode(e.target.value)}
+                        placeholder="Code à 6 chiffres"
+                        style={{ flex: '1 1 180px', minWidth: 140, border: '1px solid #D5D0C8', borderRadius: 10, padding: '0.55rem 0.65rem', fontSize: '0.82rem', color: '#1C2420', background: '#FAFAF7' }}
+                      />
+                      <button
+                        onClick={verifyAuthCode}
+                        disabled={authLoading}
+                        style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', fontWeight: 600, color: '#1C2420', border: '1px solid #C9D2BE', borderRadius: 999, background: '#F7FAF4', padding: '0.52rem 0.9rem', cursor: authLoading ? 'default' : 'pointer', opacity: authLoading ? 0.75 : 1 }}
+                      >
+                        Valider le code
+                      </button>
+                    </div>
+                  )}
+                  {authMessage && <span style={{ fontSize: '0.76rem', color: '#6B7C54' }}>{authMessage}</span>}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Free quota banner */}
           {step === 'upload' && mounted && !BYPASS_QUOTA && !isProCustomer && (
             <div style={{ marginBottom: '1.5rem', padding: '10px 16px', background: '#EBF0E4', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -546,6 +795,68 @@ export default function DiagnosticPage() {
                   ? (serverQuota.quota === -1 ? 'Diagnostics illimités' : `${serverQuota.remaining} diagnostic${serverQuota.remaining !== 1 ? 's' : ''} restants ce mois`)
                   : `${Math.max(0, FREE_QUOTA - getDiagCount())} diagnostic${Math.max(0, FREE_QUOTA - getDiagCount()) !== 1 ? 's' : ''} gratuit${Math.max(0, FREE_QUOTA - getDiagCount()) !== 1 ? 's' : ''} restant${Math.max(0, FREE_QUOTA - getDiagCount()) !== 1 ? 's' : ''}`}
               </span>
+            </div>
+          )}
+
+          {step === 'upload' && (
+            <div style={{ marginBottom: '1.25rem', padding: '1rem 1rem', borderRadius: 14, border: '1px solid #E8E4DC', background: '#FFFFFF' }}>
+              <p style={{ margin: 0, fontSize: '0.82rem', color: '#5E6C61', lineHeight: 1.6 }}>
+                Déjà abonné sur un autre appareil ? Récupérez vos avantages avec votre email.
+              </p>
+
+              {!useServerTracking && (
+                <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                  <input
+                    type="email"
+                    placeholder="Votre email"
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    style={{ border: '1px solid #DCD6CC', borderRadius: 10, padding: '0.65rem 0.75rem', fontSize: '0.85rem' }}
+                  />
+
+                  {authCodeSent && (
+                    <input
+                      type="text"
+                      placeholder="Code à 6 chiffres"
+                      value={authCode}
+                      onChange={(e) => setAuthCode(e.target.value)}
+                      style={{ border: '1px solid #DCD6CC', borderRadius: 10, padding: '0.65rem 0.75rem', fontSize: '0.85rem' }}
+                    />
+                  )}
+
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={requestAuthCode}
+                      disabled={authLoading || !authEmail.trim()}
+                      style={{ border: '1px solid #C9D2BE', background: '#F7FAF4', color: '#1C2420', borderRadius: 999, padding: '0.45rem 0.85rem', fontSize: '0.78rem', fontWeight: 600, cursor: authLoading ? 'default' : 'pointer' }}
+                    >
+                      {authLoading ? 'Envoi...' : 'Recevoir un code'}
+                    </button>
+                    {authCodeSent && (
+                      <button
+                        onClick={verifyAuthCode}
+                        disabled={authLoading || !authCode.trim()}
+                        style={{ border: 'none', background: 'linear-gradient(135deg, #8B9E6E, #6B7C54)', color: 'white', borderRadius: 999, padding: '0.45rem 0.85rem', fontSize: '0.78rem', fontWeight: 700, cursor: authLoading ? 'default' : 'pointer' }}
+                      >
+                        {authLoading ? 'Vérification...' : 'Valider le code'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {useServerTracking && (
+                <div style={{ marginTop: '0.7rem' }}>
+                  <button
+                    onClick={logoutAuth}
+                    style={{ border: '1px solid #DCD6CC', background: 'white', color: '#6D7A6A', borderRadius: 999, padding: '0.45rem 0.85rem', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    Se déconnecter de cet appareil
+                  </button>
+                </div>
+              )}
+
+              {authMessage && <p style={{ margin: '0.6rem 0 0', fontSize: '0.78rem', color: '#6D7A6A' }}>{authMessage}</p>}
             </div>
           )}
 

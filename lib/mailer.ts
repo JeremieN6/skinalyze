@@ -103,3 +103,29 @@ export async function sendLeadNotificationEmail(lead: LeadPayload) {
     `,
   });
 }
+
+export async function sendAuthCodeEmail(email: string, code: string) {
+  const config = getSmtpConfig();
+  const transporter = await getTransporter(config);
+  const safeEmail = escapeHtml(email);
+  const safeCode = escapeHtml(code);
+
+  await transporter.sendMail({
+    from: config.from,
+    to: email,
+    subject: 'Code de connexion Skinalyze',
+    text: [
+      'Voici votre code de connexion Skinalyze :',
+      code,
+      '',
+      'Ce code expire dans 15 minutes.',
+    ].join('\n'),
+    html: `
+      <h2>Connexion a votre espace Skinalyze</h2>
+      <p>Votre code de connexion:</p>
+      <p style="font-size: 28px; font-weight: 700; letter-spacing: 0.12em; margin: 16px 0;">${safeCode}</p>
+      <p>Ce code expire dans 15 minutes.</p>
+      <p style="font-size: 12px; color: #7a8876;">Demande effectuee pour: ${safeEmail}</p>
+    `,
+  });
+}

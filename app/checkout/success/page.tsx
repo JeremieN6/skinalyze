@@ -17,11 +17,11 @@ export default function CheckoutSuccessPage() {
       const sessionId = params.get('session_id');
       const userId = localStorage.getItem(USER_ID_KEY);
 
-      if (sessionId && userId) {
+      if (sessionId) {
         fetch('/api/stripe/link-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, userId }),
+          body: JSON.stringify({ sessionId, userId: userId || undefined }),
         }).catch(() => {});
       }
     } catch {}

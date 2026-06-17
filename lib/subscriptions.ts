@@ -1,4 +1,6 @@
 import { neon } from '@neondatabase/serverless';
+import { randomUUID } from 'crypto';
+import crypto from 'crypto';
 
 async function getDb() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -18,6 +20,12 @@ async function ensureTables() {
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()
     )
+  `;
+
+  await sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS skinalyze_users_email_unique_idx
+    ON skinalyze_users (LOWER(email))
+    WHERE email IS NOT NULL AND email <> ''
   `;
 
   await sql`
@@ -49,6 +57,19 @@ export async function getUser(userId: string) {
   return rows[0];
 }
 
+export async function getUserByEmail(email: string) {
+  await ensureTables();
+  const sql = await getDb();
+  const rows = await sql`
+    SELECT *
+    FROM skinalyze_users
+    WHERE lower(email) = lower(${email})
+    ORDER BY updated_at DESC
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
+}
+
 export async function getOrCreateUser(userId: string, email?: string) {
   await ensureTables();
   const sql = await getDb();
@@ -62,14 +83,48 @@ export async function getOrCreateUser(userId: string, email?: string) {
   return row;
 }
 
+export async function getOrCreateUserByEmail(email: string) {
+  await ensureTables();
+  const sql = await getDb();
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const existing = await sql`
+    SELECT *
+    FROM skinalyze_users
+    WHERE LOWER(email) = ${normalizedEmail}
+    LIMIT 1
+  `;
+
+  if (existing[0]) {
+    return existing[0];
+  }
+
+  const userId = randomUUID();
+  await sql`
+    INSERT INTO skinalyze_users (user_id, email)
+    VALUES (${userId}, ${normalizedEmail})
+  `;
+  const [row] = await sql`SELECT * FROM skinalyze_users WHERE user_id = ${userId} LIMIT 1`;
+  return row;
+}
+
+export async function getOrCreateUserByEmail(email: string) {
+  const existing = await getUserByEmail(email);
+  if (existing) return existing;
+
+  const userId = crypto.randomUUID();
+  return getOrCreateUser(userId, email);
+}
+
 export async function upsertCustomerFromStripe(stripeCustomerId: string, email?: string, plan?: string, plan_status?: string) {
   await ensureTables();
   const sql = await getDb();
+  const normalizedEmail = (email ?? '').trim().toLowerCase();
   await sql`
     INSERT INTO skinalyze_customers (stripe_customer_id, email, plan, plan_status)
-    VALUES (${stripeCustomerId}, ${email ?? ''}, ${plan ?? 'starter'}, ${plan_status ?? 'active'})
+    VALUES (${stripeCustomerId}, ${normalizedEmail}, ${plan ?? 'starter'}, ${plan_status ?? 'active'})
     ON CONFLICT (stripe_customer_id) DO UPDATE
-    SET email = COALESCE(NULLIF(${email ?? ''}, ''), skinalyze_customers.email),
+    SET email = COALESCE(NULLIF(${normalizedEmail}, ''), skinalyze_customers.email),
         plan = ${plan ?? 'starter'},
         plan_status = ${plan_status ?? 'active'},
         updated_at = NOW()
@@ -83,6 +138,17 @@ export async function upsertCustomerFromStripe(stripeCustomerId: string, email?:
       updated_at = NOW()
     WHERE stripe_customer_id = ${stripeCustomerId}
   `;
+  if (normalizedEmail) {
+    await sql`
+      UPDATE skinalyze_users
+      SET
+        stripe_customer_id = ${stripeCustomerId},
+        plan = ${plan ?? 'starter'},
+        plan_status = ${plan_status ?? 'active'},
+        updated_at = NOW()
+      WHERE LOWER(email) = ${normalizedEmail}
+    `;
+  }
   const [row] = await sql`SELECT * FROM skinalyze_customers WHERE stripe_customer_id = ${stripeCustomerId} LIMIT 1`;
   return row;
 }
@@ -109,6 +175,19 @@ export async function getUserByStripeCustomer(stripeCustomerId: string) {
   const sql = await getDb();
   const [row] = await sql`SELECT * FROM skinalyze_customers WHERE stripe_customer_id = ${stripeCustomerId} LIMIT 1`;
   return row;
+}
+
+export async function getLatestCustomerByEmail(email: string) {
+  await ensureTables();
+  const sql = await getDb();
+  const rows = await sql`
+    SELECT *
+    FROM skinalyze_customers
+    WHERE lower(email) = lower(${email})
+    ORDER BY updated_at DESC
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
 }
 
 export async function getMonthlyUsage(userId: string) {

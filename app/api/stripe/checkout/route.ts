@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { getAuthUserIdFromRequest } from '@/lib/user-auth';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2022-11-15' });
 
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
 
     const url = new URL(req.url);
     const planParam = (url.searchParams.get('plan') || '').toLowerCase();
-    const userId = url.searchParams.get('userId') || undefined;
+    const userId = getAuthUserIdFromRequest(req) || url.searchParams.get('userId') || undefined;
 
     if (planParam !== 'starter' && planParam !== 'pro') {
       return NextResponse.json({ error: 'plan must be starter or pro' }, { status: 400 });

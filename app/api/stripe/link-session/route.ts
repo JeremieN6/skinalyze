@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { linkCustomerToUser, upsertCustomerFromStripe } from '@/lib/subscriptions';
+import { getAuthUserIdFromRequest } from '@/lib/user-auth';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2022-11-15' });
 
@@ -18,7 +19,8 @@ function resolvePlan(priceId?: string | null, fallback?: string | null) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId, userId } = await req.json();
+    const { sessionId, userId: payloadUserId } = await req.json();
+    const userId = payloadUserId || getAuthUserIdFromRequest(req);
     if (!sessionId || !userId) {
       return NextResponse.json({ error: 'sessionId and userId are required' }, { status: 400 });
     }
