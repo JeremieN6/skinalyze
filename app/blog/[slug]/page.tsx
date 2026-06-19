@@ -81,7 +81,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           <div style={{ marginTop: '3rem', padding: '2.5rem', background: 'linear-gradient(135deg, rgb(107, 124, 84) 0%, rgb(28, 36, 32) 100%)', borderRadius: 20, textAlign: 'center' }}>
             <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.4rem', fontWeight: 600, color: '#FFFFFF', margin: '0 0 0.75rem' }}>Obtenez votre diagnostic personnalisé en 60 secondes</h3>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.95rem', color: 'rgba(255, 255, 255, 0.7)', margin: '0 0 1.75rem', lineHeight: 1.65 }}>
-              Lancez un diagnostic guidé ou réservez une démo pour découvrir comment Skinalyze s&apos;intègre dans le parcours client de votre institut.
+              Lancez un diagnostic guidé ou réservez une démo pour découvrir comment Skinalyze s'intègre dans le parcours client de votre institut.
             </p>
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link href="/diagnostic" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'Inter, sans-serif', fontSize: '0.92rem', fontWeight: 600, color: 'black', background: 'white', padding: '0.8rem 1.6rem', borderRadius: 50, textDecoration: 'none', boxShadow: '0 4px 16px #8B9E6E50' }}>

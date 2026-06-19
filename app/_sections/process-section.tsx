@@ -27,7 +27,7 @@ const steps = [
       </svg>
     ),
     title: 'Rapport personnalisé généré',
-    desc: 'PDF ou affichage écran avec recommandations produits adaptées. Signé par votre structure.',
+    desc: 'Un rapport structuré ou un affichage écran avec recommandations produits adaptées. Signé par votre structure.',
   },
 ];
 

@@ -6,7 +6,7 @@ const benefits = [
       </svg>
     ),
     title: 'Diagnostic en 60 secondes',
-    desc: 'Upload d\'une photo, résultat immédiat. Votre client n\'attend pas — l\'expérience est fluide et mémorable.',
+    desc: 'Import d\'au moins une photo, résultat immédiat. Votre client n\'attend pas. L\'expérience est fluide et mémorable.',
   },
   {
     icon: (
@@ -33,7 +33,7 @@ const benefits = [
       </svg>
     ),
     title: 'Valorise votre expertise',
-    desc: 'Vos clients repartent avec un rapport personnalisé signé par votre structure. Augmentez vos ventes de soins.',
+    desc: 'Vos clients repartent avec un rapport personnalisé signé par votre structure. Augmentez vos ventes complémentaire suite à l\'analyse, et surtout la satisfaction client.',
   },
 ];
 
@@ -46,7 +46,7 @@ export default function BenefitsSection() {
           <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(2rem, 3.5vw, 3rem)', fontWeight: 700, color: '#1C2420', lineHeight: 1.2, letterSpacing: '-0.02em', margin: '0 0 1rem' }}>
             Tout le pouvoir d&apos;une analyse experte, <em style={{ color: '#8B9E6E', fontStyle: 'italic' }}>sans la complexité</em>
           </h2>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.05rem', color: '#7A8876', maxWidth: 520, margin: '0 auto', lineHeight: 1.7 }}>Conçu pour s&apos;intégrer naturellement dans votre protocole cabine.</p>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.05rem', color: '#7A8876', maxWidth: 520, margin: '0 auto', lineHeight: 1.7 }}>Conçu pour s'intégrer naturellement dans votre protocole cabine.</p>
         </div>
 
         <div className="benefits-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem' }}>

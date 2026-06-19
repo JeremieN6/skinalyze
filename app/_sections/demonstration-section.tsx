@@ -37,14 +37,14 @@ export default function DemonstrationSection() {
               Trois photos, un court traitement,{' '}<em style={{ color: '#8B9E6E', fontStyle: 'italic' }}>un diagnostic lisible immédiatement.</em>
             </h2>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '1rem', color: '#7A8876', maxWidth: 520, margin: '0 0 1.4rem', lineHeight: 1.75 }}>
-              L&apos;outil est pensé pour être compris en quelques secondes. On montre le chemin utilisateur, puis on laisse le prospect regarder la démonstration.
+              L'outil est pensé pour être compris en quelques secondes. On montre le chemin utilisateur, puis on laisse le prospect regarder la démonstration.
             </p>
 
             <div style={{ display: 'grid', gap: '0.75rem', marginBottom: '1.4rem' }}>
               {[
                 'Le client prend ou transmet 3 photos.',
-                'L&apos;outil analyse automatiquement les images.',
-                'Le résultat et les recommandations s&apos;affichent.',
+                'L\'outil analyse automatiquement les images.',
+                'Le résultat et les recommandations s\'affichent.',
               ].map((line, index) => (
                 <div key={line} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                   <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#E8EFDD', color: '#4D5C3D', fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: '0.72rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{index + 1}</div>
@@ -129,7 +129,7 @@ export default function DemonstrationSection() {
                   <p style={{ margin: '0 0 0.8rem', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#6D7A6A', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Étape 2 et 3</p>
                   <div style={{ display: 'grid', gap: '0.7rem', marginBottom: '0.95rem' }}>
                     {[
-                      'L&apos;outil traite les images.',
+                      'L\'outil traite les images.',
                       'Le diagnostic se construit automatiquement.',
                       'Les recommandations sont prêtes à l&apos;emploi.',
                     ].map((line) => (
@@ -187,7 +187,7 @@ export default function DemonstrationSection() {
             <div style={{ padding: '1.25rem', background: 'linear-gradient(150deg, #FCFBF8, #F5F8F0)' }}>
               <div className="demo-visual-grid" style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: '1rem' }}>
                 <div style={{ borderRadius: 16, border: '1px solid #E8E3D8', background: '#FFFFFF', padding: '1rem' }}>
-                  <p style={{ margin: '0 0 0.8rem', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#6D7A6A', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Étape 1 · Upload des photos</p>
+                  <p style={{ margin: '0 0 0.8rem', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#6D7A6A', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Étape 1 · Vous importez des photos</p>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
                     {['Face', 'Profil', 'Zoom'].map((label) => (
                       <div key={label} style={{ borderRadius: 12, border: '1px dashed #B8C7A6', background: '#FAFCF8', padding: '0.9rem 0.6rem', textAlign: 'center' }}>
@@ -199,7 +199,7 @@ export default function DemonstrationSection() {
                 </div>
 
                 <div style={{ borderRadius: 16, border: '1px solid #E8E3D8', background: '#FFFFFF', padding: '1rem' }}>
-                  <p style={{ margin: '0 0 0.8rem', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#6D7A6A', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Étape 2 · Analyse Professionnelle</p>
+                  <p style={{ margin: '0 0 0.8rem', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#6D7A6A', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Étape 2 · Analyse professionnelle de Skinalyze</p>
                   <div style={{ height: 8, borderRadius: 999, overflow: 'hidden', background: '#E9EFE0' }}>
                     <div className="demo-progress" style={{ width: '72%', height: '100%', background: 'linear-gradient(90deg, #8B9E6E, #C4975A)' }} />
                   </div>
@@ -215,7 +215,7 @@ export default function DemonstrationSection() {
               </div>
 
               <div style={{ marginTop: '1rem', borderRadius: 16, border: '1px solid #DDE8CE', background: '#FFFFFF', padding: '1rem' }}>
-                <p style={{ margin: '0 0 0.75rem', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#6D7A6A', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Étape 3 · Diagnostic final</p>
+                <p style={{ margin: '0 0 0.75rem', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#6D7A6A', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Étape 3 · Obtenez votre Diagnostic final</p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
                   {[
                     { metric: 'Hydratation', score: '82/100' },
@@ -231,7 +231,8 @@ export default function DemonstrationSection() {
               </div>
 
               <p style={{ margin: '0.85rem 0 0', fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#6D7A6A' }}>
-                Astuce : ajoutez <strong>NEXT_PUBLIC_DEMO_VIDEO_URL</strong> dans votre environnement pour afficher votre vraie vidéo ici.
+                {/* Astuce : ajoutez <strong>NEXT_PUBLIC_DEMO_VIDEO_URL</strong> dans votre environnement pour afficher votre vraie vidéo ici. */}
+                <em>Objectif : Obtenez un résultat clair, avec un <strong>diagnostic</strong>, une <strong>routine soin</strong> et des <strong>produits adaptés</strong>.</em>
               </p>
             </div>
           </div>
