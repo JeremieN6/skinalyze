@@ -129,3 +129,126 @@ export async function sendAuthCodeEmail(email: string, code: string) {
     `,
   });
 }
+
+export async function sendWelcomePilotEmail(
+  to: string,
+  name: string,
+  company: string,
+  magicLink: string,
+  trialEndsAt: Date,
+) {
+  const config = getSmtpConfig();
+  const transporter = await getTransporter(config);
+  const safeName = escapeHtml(name);
+  const safeCompany = escapeHtml(company);
+  const safeMagicLink = escapeHtml(magicLink);
+  const expiryDate = trialEndsAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  await transporter.sendMail({
+    from: config.from,
+    to,
+    subject: `Bienvenue dans le programme pilote Skinalyze — votre accès de 14 jours`,
+    text: [
+      `Bonjour ${name},`,
+      '',
+      `Votre accès pilote Skinalyze est activé pour ${company}.`,
+      '',
+      `Votre essai est valable jusqu'au ${expiryDate}.`,
+      `Diagnostics illimités, aucune carte bancaire requise.`,
+      '',
+      `Accédez à votre espace ici :`,
+      magicLink,
+      '',
+      `Ce lien est valable 7 jours. Après connexion, vous pourrez vous reconnecter à tout moment via votre email.`,
+      '',
+      `L'équipe Skinalyze`,
+    ].join('\n'),
+    html: `
+      <div style="font-family: Inter, sans-serif; max-width: 560px; margin: 0 auto; color: #1C2420;">
+        <div style="background: linear-gradient(135deg, #8B9E6E, #6B7C54); padding: 32px; border-radius: 16px 16px 0 0; text-align: center;">
+          <h1 style="color: white; font-family: Georgia, serif; font-size: 26px; margin: 0;">Skinalyze</h1>
+          <p style="color: rgba(255,255,255,0.85); font-size: 14px; margin: 8px 0 0;">Diagnostic cutané par IA</p>
+        </div>
+        <div style="background: #FAFAF7; padding: 40px 32px; border: 1px solid #E0DDD6; border-top: none;">
+          <p style="font-size: 16px; margin: 0 0 16px;">Bonjour <strong>${safeName}</strong>,</p>
+          <p style="font-size: 15px; color: #3D4A3A; line-height: 1.7; margin: 0 0 24px;">
+            Votre accès pilote Skinalyze est activé pour <strong>${safeCompany}</strong>.<br>
+            Vous bénéficiez de <strong>diagnostics illimités</strong> jusqu'au <strong>${expiryDate}</strong>.
+          </p>
+          <div style="background: white; border: 1.5px solid #E0DDD6; border-radius: 12px; padding: 20px 24px; margin: 0 0 28px;">
+            <p style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #8B9E6E; margin: 0 0 12px;">Ce que vous obtenez</p>
+            <ul style="margin: 0; padding: 0 0 0 18px; color: #3D4A3A; font-size: 14px; line-height: 2;">
+              <li>✦ Diagnostics cutanés illimités par IA</li>
+              <li>✦ Accès complet pendant 14 jours</li>
+              <li>✦ Aucune carte bancaire requise</li>
+              <li>✦ Votre accès expire le <strong>${expiryDate}</strong></li>
+            </ul>
+          </div>
+          <div style="text-align: center; margin: 0 0 28px;">
+            <a href="${safeMagicLink}" style="display: inline-block; background: linear-gradient(135deg, #8B9E6E, #6B7C54); color: white; text-decoration: none; padding: 16px 36px; border-radius: 50px; font-size: 15px; font-weight: 700; letter-spacing: 0.03em;">
+              Accéder à mon espace →
+            </a>
+          </div>
+          <p style="font-size: 12px; color: #9AA898; text-align: center; margin: 0 0 24px;">
+            Ce lien de connexion est valable 7 jours.<br>
+            Après connexion, vous pourrez vous reconnecter à tout moment via votre email.
+          </p>
+          <hr style="border: none; border-top: 1px solid #E0DDD6; margin: 0 0 20px;">
+          <p style="font-size: 13px; color: #7A8876; margin: 0;">
+            Une question ? Répondez directement à cet email.<br>
+            <em>L'équipe Skinalyze</em>
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+export async function sendTrialExpiryReminderEmail(to: string, name: string, company: string) {
+  const config = getSmtpConfig();
+  const transporter = await getTransporter(config);
+  const safeName = escapeHtml(name);
+  const safeCompany = escapeHtml(company);
+  const appUrl = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? '';
+
+  await transporter.sendMail({
+    from: config.from,
+    to,
+    subject: `Votre essai Skinalyze se termine aujourd'hui — continuez avec un abonnement`,
+    text: [
+      `Bonjour ${name},`,
+      '',
+      `Votre essai pilote Skinalyze pour ${company} prend fin aujourd'hui.`,
+      '',
+      `Pour continuer à utiliser les diagnostics cutanés IA sans interruption, choisissez l'abonnement qui vous convient :`,
+      `${appUrl}/#pricing`,
+      '',
+      `L'équipe Skinalyze`,
+    ].join('\n'),
+    html: `
+      <div style="font-family: Inter, sans-serif; max-width: 560px; margin: 0 auto; color: #1C2420;">
+        <div style="background: linear-gradient(135deg, #C4975A, #a87c46); padding: 32px; border-radius: 16px 16px 0 0; text-align: center;">
+          <h1 style="color: white; font-family: Georgia, serif; font-size: 26px; margin: 0;">Skinalyze</h1>
+          <p style="color: rgba(255,255,255,0.85); font-size: 14px; margin: 8px 0 0;">Votre essai se termine aujourd'hui</p>
+        </div>
+        <div style="background: #FAFAF7; padding: 40px 32px; border: 1px solid #E0DDD6; border-top: none;">
+          <p style="font-size: 16px; margin: 0 0 16px;">Bonjour <strong>${safeName}</strong>,</p>
+          <p style="font-size: 15px; color: #3D4A3A; line-height: 1.7; margin: 0 0 24px;">
+            Votre essai pilote Skinalyze pour <strong>${safeCompany}</strong> se termine <strong>aujourd'hui</strong>.<br>
+            Pour ne pas perdre l'accès à vos diagnostics, choisissez un abonnement adapté à votre structure.
+          </p>
+          <div style="text-align: center; margin: 0 0 28px;">
+            <a href="${safeCompany ? appUrl + '/#pricing' : appUrl + '/#pricing'}" style="display: inline-block; background: linear-gradient(135deg, #C4975A, #a87c46); color: white; text-decoration: none; padding: 16px 36px; border-radius: 50px; font-size: 15px; font-weight: 700; letter-spacing: 0.03em;">
+              Voir les abonnements →
+            </a>
+          </div>
+          <hr style="border: none; border-top: 1px solid #E0DDD6; margin: 0 0 20px;">
+          <p style="font-size: 13px; color: #7A8876; margin: 0;">
+            Une question ? Répondez directement à cet email.<br>
+            <em>L'équipe Skinalyze</em>
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}

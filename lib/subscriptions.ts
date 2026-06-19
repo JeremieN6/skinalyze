@@ -21,6 +21,9 @@ async function ensureTables() {
     )
   `;
 
+  await sql`ALTER TABLE skinalyze_users ADD COLUMN IF NOT EXISTS trial_started_at TIMESTAMP`;
+  await sql`ALTER TABLE skinalyze_users ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMP`;
+
   await sql`
     CREATE UNIQUE INDEX IF NOT EXISTS skinalyze_users_email_unique_idx
     ON skinalyze_users (LOWER(email))
@@ -219,14 +222,60 @@ export async function recordUsage(userId: string) {
   return row;
 }
 
+export async function activateTrial(userId: string) {
+  await ensureTables();
+  const sql = await getDb();
+  await sql`
+    UPDATE skinalyze_users
+    SET plan = 'trial',
+        plan_status = 'active',
+        trial_started_at = NOW(),
+        trial_ends_at = NOW() + INTERVAL '14 days',
+        updated_at = NOW()
+    WHERE user_id = ${userId}
+  `;
+  const [row] = await sql`SELECT * FROM skinalyze_users WHERE user_id = ${userId} LIMIT 1`;
+  return row;
+}
+
+export async function getTrialsExpiringToday() {
+  await ensureTables();
+  const sql = await getDb();
+  return sql`
+    SELECT user_id, email, trial_ends_at
+    FROM skinalyze_users
+    WHERE plan = 'trial'
+      AND plan_status = 'active'
+      AND trial_ends_at::date = CURRENT_DATE
+  `;
+}
+
+export async function expireTrials() {
+  await ensureTables();
+  const sql = await getDb();
+  await sql`
+    UPDATE skinalyze_users
+    SET plan = 'free', plan_status = 'expired', updated_at = NOW()
+    WHERE plan = 'trial' AND plan_status = 'active' AND trial_ends_at < NOW()
+  `;
+}
+
 export async function getQuotaAndRemaining(userId: string) {
   await ensureTables();
   const sql = await getDb();
-  const [user] = await sql`SELECT plan FROM skinalyze_users WHERE user_id = ${userId} LIMIT 1`;
-  const plan = user?.plan ?? 'free';
+  const [user] = await sql`SELECT plan, plan_status, trial_ends_at FROM skinalyze_users WHERE user_id = ${userId} LIMIT 1`;
+  let plan = user?.plan ?? 'free';
+
+  // Auto-expire trial if past end date
+  if (plan === 'trial' && user?.trial_ends_at && new Date(user.trial_ends_at) < new Date()) {
+    await sql`UPDATE skinalyze_users SET plan = 'free', plan_status = 'expired', updated_at = NOW() WHERE user_id = ${userId}`;
+    plan = 'free';
+  }
+
   let quota: number | -1;
   if (plan === 'pro') quota = parseInt(process.env.PRO_MONTHLY_QUOTA ?? '150', 10);
   else if (plan === 'starter') quota = parseInt(process.env.STARTER_MONTHLY_QUOTA ?? '50', 10);
+  else if (plan === 'trial') quota = -1; // diagnostics illimités pendant l'essai
   else quota = parseInt(process.env.FREE_MONTHLY_QUOTA ?? '3', 10);
   const [usedRow] = await sql`SELECT COUNT(*)::int AS count FROM skinalyze_diagnostics_usage WHERE user_id = ${userId} AND created_at >= date_trunc('month', now())`;
   const used = Number(usedRow?.count ?? 0);

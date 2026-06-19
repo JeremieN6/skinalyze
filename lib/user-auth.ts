@@ -1,5 +1,5 @@
 import { neon } from '@neondatabase/serverless';
-import { createHash, randomInt } from 'crypto';
+import { createHash, randomInt, randomUUID } from 'crypto';
 import type { NextRequest } from 'next/server';
 import { getOrCreateUserByEmail } from '@/lib/subscriptions';
 
@@ -90,4 +90,56 @@ export async function verifyAuthCode(email: string, code: string) {
 
 export function getAuthUserIdFromRequest(req: NextRequest) {
   return req.cookies.get(AUTH_COOKIE_NAME)?.value ?? null;
+}
+
+const MAGIC_TOKEN_TTL_DAYS = 7;
+
+async function ensureMagicTokensTable() {
+  const sql = await getDb();
+  await sql`
+    CREATE TABLE IF NOT EXISTS skinalyze_magic_tokens (
+      id BIGSERIAL PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      email TEXT NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      expires_at TIMESTAMP NOT NULL,
+      used_at TIMESTAMP,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+}
+
+export async function createMagicToken(email: string): Promise<string> {
+  await ensureMagicTokensTable();
+  const normalizedEmail = normalizeEmail(email);
+  const user = await getOrCreateUserByEmail(normalizedEmail);
+  const token = randomUUID();
+  const sql = await getDb();
+  await sql`
+    INSERT INTO skinalyze_magic_tokens (user_id, email, token, expires_at)
+    VALUES (
+      ${user.user_id},
+      ${normalizedEmail},
+      ${token},
+      NOW() + (${MAGIC_TOKEN_TTL_DAYS} * INTERVAL '1 day')
+    )
+  `;
+  return token;
+}
+
+export async function verifyMagicToken(token: string): Promise<{ userId: string; email: string } | null> {
+  await ensureMagicTokensTable();
+  const sql = await getDb();
+  const rows = await sql`
+    SELECT id, user_id, email
+    FROM skinalyze_magic_tokens
+    WHERE token = ${token}
+      AND used_at IS NULL
+      AND expires_at > NOW()
+    LIMIT 1
+  `;
+  const hit = rows[0];
+  if (!hit) return null;
+  await sql`UPDATE skinalyze_magic_tokens SET used_at = NOW() WHERE id = ${hit.id}`;
+  return { userId: hit.user_id as string, email: hit.email as string };
 }

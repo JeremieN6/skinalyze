@@ -216,15 +216,36 @@ export default function DemonstrationSection() {
 
               <div style={{ marginTop: '1rem', borderRadius: 16, border: '1px solid #DDE8CE', background: '#FFFFFF', padding: '1rem' }}>
                 <p style={{ margin: '0 0 0.75rem', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#6D7A6A', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Étape 3 · Obtenez votre Diagnostic final</p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
+                <div className="demo-value-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
                   {[
-                    { metric: 'Hydratation', score: '82/100' },
-                    { metric: 'Éclat', score: '76/100' },
-                    { metric: 'Zones sensibles', score: '2 alertes' },
-                  ].map((card) => (
-                    <div key={card.metric} style={{ borderRadius: 12, background: '#F7FAF2', border: '1px solid #E1EACF', padding: '0.65rem' }}>
-                      <p style={{ margin: 0, fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: '#5F6C58' }}>{card.metric}</p>
-                      <p style={{ margin: '0.35rem 0 0', fontFamily: 'Inter, sans-serif', fontSize: '0.92rem', fontWeight: 700, color: '#253023' }}>{card.score}</p>
+                    {
+                      title: 'Ce qu’on observe',
+                      bg: '#EEF2FF',
+                      border: '#D7E1FF',
+                      points: ['Zones clés à traiter', 'Priorités client visibles'],
+                    },
+                    {
+                      title: 'Routine & bien-être',
+                      bg: '#EFF7ED',
+                      border: '#D5E8D0',
+                      points: ['2-3 gestes personnalisés', 'Conseils hygiène de vie'],
+                    },
+                    {
+                      title: 'Produits conseillés',
+                      bg: '#FFF5E7',
+                      border: '#F4DFBF',
+                      points: ['Sélection matin / soir', 'Upsell naturel en institut'],
+                    },
+                  ].map((section) => (
+                    <div key={section.title} style={{ borderRadius: 12, background: section.bg, border: `1px solid ${section.border}`, padding: '0.65rem' }}>
+                      <p style={{ margin: 0, fontFamily: 'Inter, sans-serif', fontSize: '0.74rem', color: '#334235', fontWeight: 700 }}>{section.title}</p>
+                      <div style={{ marginTop: '0.45rem', display: 'grid', gap: '0.35rem' }}>
+                        {section.points.map((point) => (
+                          <p key={point} style={{ margin: 0, fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: '#516150', lineHeight: 1.4 }}>
+                            • {point}
+                          </p>
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -242,6 +263,7 @@ export default function DemonstrationSection() {
       <style>{`
         @media (max-width: 768px) {
           .demo-stage { grid-template-columns: 1fr !important; }
+          .demo-value-grid { grid-template-columns: 1fr !important; }
         }
 
         @keyframes demoPulse {
