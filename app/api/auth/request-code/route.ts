@@ -48,25 +48,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Impossible d envoyer le code' }, { status: 500 });
   }
 }
-import { NextResponse } from 'next/server';
-import { generateOtpCode, saveOtpCode } from '@/lib/user-auth';
-import { sendAuthCodeEmail } from '@/lib/mailer';
-
-export async function POST(req: Request) {
-  try {
-    const { email } = await req.json();
-    const emailNorm = String(email ?? '').trim().toLowerCase();
-    if (!emailNorm || !emailNorm.includes('@')) {
-      return NextResponse.json({ error: 'Email invalide' }, { status: 400 });
-    }
-
-    const code = generateOtpCode();
-    await saveOtpCode(emailNorm, code);
-    await sendAuthCodeEmail(emailNorm, code);
-
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error('Auth request-code error', error);
-    return NextResponse.json({ error: 'Impossible d envoyer le code' }, { status: 500 });
-  }
-}

@@ -28,7 +28,7 @@ export default function DemonstrationSection() {
   }, [isOpen]);
 
   return (
-    <section style={{ position: 'relative', overflow: 'hidden', padding: '92px 2rem', background: 'linear-gradient(180deg, #F5F2EC 0%, #FAF8F4 100%)' }}>
+    <section id="demo" style={{ position: 'relative', overflow: 'hidden', padding: '92px 2rem', background: 'linear-gradient(180deg, #F5F2EC 0%, #FAF8F4 100%)' }}>
       <div style={{ maxWidth: 1220, margin: '0 auto', position: 'relative' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '0.95fr 1.05fr', gap: '2rem', alignItems: 'center' }}>
           <div style={{ maxWidth: 520 }}>

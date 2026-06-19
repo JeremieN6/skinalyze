@@ -1,6 +1,5 @@
 import { neon } from '@neondatabase/serverless';
 import { randomUUID } from 'crypto';
-import crypto from 'crypto';
 
 async function getDb() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -106,14 +105,6 @@ export async function getOrCreateUserByEmail(email: string) {
   `;
   const [row] = await sql`SELECT * FROM skinalyze_users WHERE user_id = ${userId} LIMIT 1`;
   return row;
-}
-
-export async function getOrCreateUserByEmail(email: string) {
-  const existing = await getUserByEmail(email);
-  if (existing) return existing;
-
-  const userId = crypto.randomUUID();
-  return getOrCreateUser(userId, email);
 }
 
 export async function upsertCustomerFromStripe(stripeCustomerId: string, email?: string, plan?: string, plan_status?: string) {

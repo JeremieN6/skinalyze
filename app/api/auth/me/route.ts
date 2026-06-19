@@ -26,21 +26,3 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ authenticated: false });
   }
 }
-import { NextResponse } from 'next/server';
-import { getQuotaAndRemaining } from '@/lib/subscriptions';
-import { getAuthenticatedUserIdFromCookie } from '@/lib/user-auth';
-
-export async function GET() {
-  try {
-    const userId = await getAuthenticatedUserIdFromCookie();
-    if (!userId) {
-      return NextResponse.json({ authenticated: false }, { status: 401 });
-    }
-
-    const quota = await getQuotaAndRemaining(userId);
-    return NextResponse.json({ authenticated: true, userId, quota });
-  } catch (error) {
-    console.error('Auth me error', error);
-    return NextResponse.json({ error: 'Unable to fetch auth state' }, { status: 500 });
-  }
-}
