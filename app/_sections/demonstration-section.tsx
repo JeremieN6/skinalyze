@@ -79,7 +79,7 @@ export default function DemonstrationSection() {
             <div style={{ position: 'relative', borderRadius: 26, background: '#FFFFFF', border: '1px solid rgba(139,158,110,0.18)', boxShadow: '0 22px 50px rgba(28,36,32,0.11)', overflow: 'hidden' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.95rem 1.1rem', borderBottom: '1px solid #ECE8DE', background: '#FFFFFF' }}>
                 <div>
-                  <p style={{ margin: 0, fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 700, color: '#1C2420' }}>Interface produit</p>
+                  <p style={{ margin: 0, fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 700, color: '#1C2420' }}>Interface Diagnostic</p>
                   <p style={{ margin: '0.15rem 0 0', fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: '#7A8876' }}>Démo de prise en main</p>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
@@ -146,7 +146,7 @@ export default function DemonstrationSection() {
                     {[
                       'L\'outil traite les images.',
                       'Le diagnostic se construit automatiquement.',
-                      'Les recommandations sont prêtes à l&apos;emploi.',
+                      'Les recommandations sont prêtes à l\'emploi.',
                     ].map((line) => (
                       <div key={line} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '0.75rem 0.85rem', borderRadius: 14, background: '#FFFFFF', border: '1px solid #E8E3D8' }}>
                         <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#E8EFDD', color: '#4D5C3D', fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: '0.68rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>•</div>

@@ -138,7 +138,7 @@ export default function DemoFormSection() {
                 </div>
                 <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                   <div>
-                    <label style={labelStyle}>Nom de l&apos;entreprise *</label>
+                    <label style={labelStyle}>Nom de l'entreprise *</label>
                     <input name="company" placeholder="Institut Beauté Paris" required value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} style={inputStyle} />
                   </div>
                   <div>

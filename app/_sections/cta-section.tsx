@@ -8,7 +8,7 @@ export default function CtaSection() {
       <div style={{ maxWidth: 700, margin: '0 auto', position: 'relative' }}>
         <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', fontWeight: 700, color: '#C4975A', textTransform: 'uppercase', letterSpacing: '0.12em', display: 'block', marginBottom: '1.25rem' }}>Passez à l&apos;action</span>
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(2.2rem, 4vw, 3.5rem)', fontWeight: 700, color: 'white', lineHeight: 1.15, letterSpacing: '-0.02em', margin: '0 0 1.25rem' }}>
-          Prêt à transformer l&apos;expérience de vos clients&nbsp;?
+          Prêt à transformer l'expérience de vos clients ?
         </h2>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.7, margin: '0 0 2.5rem' }}>
           Rejoignez les instituts qui ont déjà adopté Skinalyze — sans installation, sans engagement.

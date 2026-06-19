@@ -22,6 +22,7 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
@@ -29,14 +30,58 @@ jobs:
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_rsa
 
-      - name: Add VPS to known_hosts
+      - name: Validate SSH secrets
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
         run: |
+          set -euo pipefail
+          if [ -z "${VPS_HOST:-}" ]; then
+            echo "Missing required secret: VPS_HOST"
+            exit 1
+          fi
+          if [ -z "${VPS_USER:-}" ]; then
+            echo "Missing required secret: VPS_USER"
+            exit 1
+          fi
+
+      - name: Add VPS to known_hosts
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+        run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
-          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+          chmod 700 ~/.ssh
+          : > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+          PORT="${VPS_PORT:-22}"
+          for attempt in 1 2 3; do
+            if ssh-keyscan -p "$PORT" -T 15 -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
+              if [ -s ~/.ssh/known_hosts ]; then
+                break
+              fi
+            fi
+            echo "ssh-keyscan attempt $attempt failed for $VPS_HOST:$PORT"
+            sleep 2
+          done
+
+          if ! [ -s ~/.ssh/known_hosts ]; then
+            echo "Unable to fetch host key from $VPS_HOST:$PORT"
+            exit 1
+          fi
+
+          sort -u ~/.ssh/known_hosts -o ~/.ssh/known_hosts
 
       - name: Deploy on VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
         run: |
-          ssh -o StrictHostKeyChecking=yes ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+          set -euo pipefail
+          ssh -p "${VPS_PORT:-22}" -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST" << 'EOF'
           set -euo pipefail
           cd /srv/saas/skinalyze || exit 1
           git fetch --all --prune
