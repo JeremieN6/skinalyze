@@ -109,16 +109,31 @@ export default function DemonstrationSection() {
                   </div>
 
                   <div style={{ borderRadius: 18, border: '1px solid #E6E1D5', background: '#FFFFFF', padding: '0.95rem' }}>
-                    <p style={{ margin: '0 0 0.7rem', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#6D7A6A', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Ce que le client voit</p>
-                    <div style={{ display: 'grid', gap: '0.55rem' }}>
+                    <p style={{ margin: '0 0 0.7rem', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#6D7A6A', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>La valeur client</p>
+                    <div style={{ display: 'grid', gap: '0.5rem' }}>
                       {[
-                        { label: 'Hydratation', value: '82/100' },
-                        { label: 'Éclat', value: '76/100' },
-                        { label: 'Sensibilité', value: '2 alertes' },
+                        {
+                          title: 'Ce qu\'on observe',
+                          bg: '#EEF2FF',
+                          border: '#D7E1FF',
+                          hint: 'Zones clés + priorités',
+                        },
+                        {
+                          title: 'Routine & bien-être',
+                          bg: '#EFF7ED',
+                          border: '#D5E8D0',
+                          hint: 'Gestes simples personnalisés',
+                        },
+                        {
+                          title: 'Produits conseillés',
+                          bg: '#FFF5E7',
+                          border: '#F4DFBF',
+                          hint: 'Matin / soir + upsell naturel',
+                        },
                       ].map((item) => (
-                        <div key={item.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '0.5rem 0.65rem', borderRadius: 12, background: '#F7FAF2' }}>
-                          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#3D4A3A' }}>{item.label}</span>
-                          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', fontWeight: 700, color: '#253023' }}>{item.value}</span>
+                        <div key={item.title} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '0.5rem 0.65rem', borderRadius: 12, background: item.bg, border: `1px solid ${item.border}` }}>
+                          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', fontWeight: 700, color: '#334235' }}>{item.title}</span>
+                          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: '#556455' }}>{item.hint}</span>
                         </div>
                       ))}
                     </div>
@@ -219,22 +234,22 @@ export default function DemonstrationSection() {
                 <div className="demo-value-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
                   {[
                     {
-                      title: 'Ce qu’on observe',
+                      title: 'Ce qu’on observe - Expertise Dermatologique',
                       bg: '#EEF2FF',
                       border: '#D7E1FF',
                       points: ['Zones clés à traiter', 'Priorités client visibles'],
                     },
                     {
-                      title: 'Routine & bien-être',
+                      title: 'Routine & bien-être - Expert en hygiène de vie',
                       bg: '#EFF7ED',
                       border: '#D5E8D0',
                       points: ['2-3 gestes personnalisés', 'Conseils hygiène de vie'],
                     },
                     {
-                      title: 'Produits conseillés',
+                      title: 'Produits conseillés - Expert en cosmétique et formulation',
                       bg: '#FFF5E7',
                       border: '#F4DFBF',
-                      points: ['Sélection matin / soir', 'Upsell naturel en institut'],
+                      points: ['Sélection matin / soir', 'Argument de vente additionnelle guidée'],
                     },
                   ].map((section) => (
                     <div key={section.title} style={{ borderRadius: 12, background: section.bg, border: `1px solid ${section.border}`, padding: '0.65rem' }}>
