@@ -45,34 +45,13 @@ jobs:
             exit 1
           fi
 
-      - name: Add VPS to known_hosts
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_PORT: ${{ secrets.VPS_PORT }}
+      - name: Prepare known_hosts file
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          : > ~/.ssh/known_hosts
+          touch ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-
-          PORT="${VPS_PORT:-22}"
-          for attempt in 1 2 3; do
-            if ssh-keyscan -p "$PORT" -T 15 -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
-              if [ -s ~/.ssh/known_hosts ]; then
-                break
-              fi
-            fi
-            echo "ssh-keyscan attempt $attempt failed for $VPS_HOST:$PORT"
-            sleep 2
-          done
-
-          if ! [ -s ~/.ssh/known_hosts ]; then
-            echo "Unable to fetch host key from $VPS_HOST:$PORT"
-            exit 1
-          fi
-
-          sort -u ~/.ssh/known_hosts -o ~/.ssh/known_hosts
 
       - name: Deploy on VPS
         env:
@@ -81,7 +60,8 @@ jobs:
           VPS_PORT: ${{ secrets.VPS_PORT }}
         run: |
           set -euo pipefail
-          ssh -p "${VPS_PORT:-22}" -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST" << 'EOF'
+          SSH_OPTS="-p ${VPS_PORT:-22} -o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=$HOME/.ssh/known_hosts"
+          ssh $SSH_OPTS "$VPS_USER@$VPS_HOST" << 'EOF'
           set -euo pipefail
           cd /srv/saas/skinalyze || exit 1
           git fetch --all --prune
