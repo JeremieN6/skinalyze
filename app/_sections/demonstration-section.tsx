@@ -128,7 +128,7 @@ export default function DemonstrationSection() {
                           title: 'Produits conseillés',
                           bg: '#FFF5E7',
                           border: '#F4DFBF',
-                          hint: 'Matin / soir + upsell naturel',
+                          hint: 'Produit conseillé - Matin / soir',
                         },
                       ].map((item) => (
                         <div key={item.title} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '0.5rem 0.65rem', borderRadius: 12, background: item.bg, border: `1px solid ${item.border}` }}>
