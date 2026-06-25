@@ -5,6 +5,7 @@ import articlesData from '@/skincare-spa/src/assets/data/articles.json';
 
 const APP_DIR = path.join(process.cwd(), 'app');
 const EXCLUDED_PREFIXES = ['/admin', '/api'];
+const EXCLUDED_ROUTES = ['/checkout/success'];
 
 function getBaseUrl() {
   return (process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? 'https://skinalyze.sassify.fr').replace(
@@ -14,6 +15,10 @@ function getBaseUrl() {
 }
 
 function isExcludedRoute(route: string) {
+  if (EXCLUDED_ROUTES.includes(route)) {
+    return true;
+  }
+
   return EXCLUDED_PREFIXES.some((prefix) => route === prefix || route.startsWith(`${prefix}/`));
 }
 
