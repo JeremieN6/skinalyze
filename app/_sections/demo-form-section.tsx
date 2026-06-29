@@ -57,7 +57,7 @@ export default function DemoFormSection() {
   );
 
   return (
-    <section id="demo" style={{ padding: '100px 2rem', background: 'linear-gradient(160deg, #F5F2EC 0%, #FAF8F4 100%)' }}>
+    <section id="form" style={{ padding: '100px 2rem', background: 'linear-gradient(160deg, #F5F2EC 0%, #FAF8F4 100%)' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
           <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', fontWeight: 700, color: '#C4975A', textTransform: 'uppercase', letterSpacing: '0.12em', display: 'block', marginBottom: '1rem' }}>Programme pilote</span>
